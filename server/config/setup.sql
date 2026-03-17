@@ -1,10 +1,9 @@
--- Run this in MySQL Workbench or terminal to set up your database
 
--- 1. Create the database
+
 CREATE DATABASE IF NOT EXISTS sit_monitoring;
 USE sit_monitoring;
 
--- 2. Create users table
+
 CREATE TABLE IF NOT EXISTS users (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   id_number   CHAR(8) NOT NULL UNIQUE,
