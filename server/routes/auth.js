@@ -20,41 +20,41 @@ router.post('/register', async (req, res) => {
     address,
   } = req.body;
 
-  // Validate ID number: must be exactly 8 digits
-  if (!/^\d{8}$/.test(id_number)) {
-    return res.status(400).json({
-      field: 'id_number',
-      message: 'ID Number must be exactly 8 digits.',
-    });
-  }
+  if (!/^\d{8}$/.test(id_number))
+    return res
+      .status(400)
+      .json({
+        field: 'id_number',
+        message: 'ID Number must be exactly 8 digits.',
+      });
 
-  if (!password || password.length < 6) {
-    return res.status(400).json({
-      field: 'password',
-      message: 'Password must be at least 6 characters.',
-    });
-  }
+  if (!password || password.length < 6)
+    return res
+      .status(400)
+      .json({
+        field: 'password',
+        message: 'Password must be at least 6 characters.',
+      });
 
   try {
-    // Check if ID already exists
     const [existing] = await pool.query(
       'SELECT id_number FROM users WHERE id_number = ?',
       [id_number],
     );
-    if (existing.length > 0) {
-      return res.status(409).json({
-        field: 'id_number',
-        message: 'ID Number is already registered.',
-      });
-    }
+    if (existing.length > 0)
+      return res
+        .status(409)
+        .json({
+          field: 'id_number',
+          message: 'ID Number is already registered.',
+        });
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user
     await pool.query(
-      `INSERT INTO users (id_number, last_name, first_name, middle_name, course_level, password, email, course, address)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users 
+        (id_number, last_name, first_name, middle_name, course_level, password, email, course, address, role, remaining_sessions)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 30)`,
       [
         id_number,
         last_name,
@@ -76,50 +76,47 @@ router.post('/register', async (req, res) => {
 });
 
 // ── LOGIN ─────────────────────────────────────────────────────
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { id_number, password } = req.body;
 
-  // Validate ID number format
-  if (!/^\d{8}$/.test(id_number)) {
-    return res.status(400).json({
-      field: 'id_number',
-      message: 'ID Number must be exactly 8 digits.',
-    });
-  }
+  if (!/^\d{8}$/.test(id_number))
+    return res
+      .status(400)
+      .json({
+        field: 'id_number',
+        message: 'ID Number must be exactly 8 digits.',
+      });
 
-  if (!password) {
+  if (!password)
     return res
       .status(400)
       .json({ field: 'password', message: 'Password is required.' });
-  }
 
   try {
-    // Find user by ID
     const [rows] = await pool.query('SELECT * FROM users WHERE id_number = ?', [
       id_number,
     ]);
-
-    if (rows.length === 0) {
-      return res.status(401).json({
-        field: 'id_number',
-        message: 'Incorrect ID Number or Password.',
-      });
-    }
+    if (rows.length === 0)
+      return res
+        .status(401)
+        .json({
+          field: 'id_number',
+          message: 'Incorrect ID Number or Password.',
+        });
 
     const user = rows[0];
-
-    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        field: 'password',
-        message: 'Incorrect ID Number or Password.',
-      });
-    }
+    if (!isMatch)
+      return res
+        .status(401)
+        .json({
+          field: 'password',
+          message: 'Incorrect ID Number or Password.',
+        });
 
-    // Generate JWT
     const token = jwt.sign(
-      { id: user.id_number, first_name: user.first_name },
+      { id: user.id_number, first_name: user.first_name, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN },
     );
@@ -132,6 +129,9 @@ router.post('/login', async (req, res) => {
         first_name: user.first_name,
         last_name: user.last_name,
         course: user.course,
+        course_level: user.course_level,
+        remaining_sessions: user.remaining_sessions,
+        role: user.role,
       },
     });
   } catch (err) {
