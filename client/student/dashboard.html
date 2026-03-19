@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Student Dashboard – CCS Sit-in</title>
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="student.css" />
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="logo">CCS Sit-in Monitoring System</div>
+      <div class="nav-right">
+        <span class="nav-user">👤 <span id="welcomeName"></span></span>
+        <span class="nav-sessions"
+          >Sessions left: <strong id="remainingSessions">--</strong></span
+        >
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="student-container">
+      <!-- SIT-IN FORM (shown when no active session) -->
+      <div id="formSection">
+        <div class="student-card">
+          <div class="card-header">
+            <h2>Sit-in Request</h2>
+            <p>Fill in the details below to start your sit-in session</p>
+          </div>
+
+          <form id="sitInForm">
+            <div class="form-row">
+              <div class="field-group">
+                <label>ID Number</label>
+                <input
+                  type="text"
+                  id="displayId"
+                  readonly
+                  class="readonly-input"
+                />
+              </div>
+              <div class="field-group">
+                <label>Student Name</label>
+                <input
+                  type="text"
+                  id="displayName"
+                  readonly
+                  class="readonly-input"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field-group">
+                <label>Remaining Sessions</label>
+                <input
+                  type="text"
+                  id="displaySessions"
+                  readonly
+                  class="readonly-input"
+                />
+              </div>
+              <div class="field-group">
+                <label>Date & Time</label>
+                <input
+                  type="text"
+                  id="displayDateTime"
+                  readonly
+                  class="readonly-input"
+                />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Purpose <span class="required">*</span></label>
+              <input
+                type="text"
+                id="purpose"
+                placeholder="e.g. Working on thesis, Practicing Java..."
+              />
+            </div>
+
+            <div class="field-group">
+              <label>Lab <span class="required">*</span></label>
+              <input type="text" id="lab" placeholder="e.g. 524, 526..." />
+            </div>
+
+            <button type="submit" class="btn-primary">
+              Submit Sit-in Request
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ACTIVE SESSION VIEW (shown when session exists) -->
+      <div id="activeSection" class="hidden">
+        <div class="student-card active-card">
+          <div class="active-badge">● Active Session</div>
+          <h2>You have an active sit-in session</h2>
+          <p class="active-sub">
+            Show the receipt below to the working scholar
+          </p>
+          <button class="btn-show-receipt" id="showReceiptBtn">
+            View Receipt
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEIPT MODAL -->
+    <div id="receiptModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="receipt-header">
+          <div class="receipt-logo">📋</div>
+          <h3>Sit-in Receipt</h3>
+          <p>College of Computer Studies</p>
+        </div>
+
+        <div class="receipt-body">
+          <div class="receipt-row">
+            <span class="receipt-label">ID Number</span>
+            <span class="receipt-value" id="rcptIdNumber">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Student Name</span>
+            <span class="receipt-value" id="rcptName">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Purpose</span>
+            <span class="receipt-value" id="rcptPurpose">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Lab</span>
+            <span class="receipt-value" id="rcptLab">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Date Generated</span>
+            <span class="receipt-value" id="rcptDate">--</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Status</span>
+            <span class="receipt-value receipt-status" id="rcptStatus"
+              >Active</span
+            >
+          </div>
+        </div>
+
+        <div class="receipt-footer">
+          <p class="receipt-note">
+            ⚠️ Log out only when you are done with your session. Logging out
+            will deduct 1 session.
+          </p>
+          <button id="logoutBtn" class="btn-logout">
+            Log Out & End Session
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+      // Pre-fill read-only fields
+      const _user = getUser();
+      if (_user) {
+        document.getElementById('displayId').value = _user.id_number;
+        document.getElementById('displayName').value =
+          `${_user.first_name} ${_user.last_name}`;
+        document.getElementById('displaySessions').value =
+          _user.remaining_sessions;
+        document.getElementById('welcomeName').textContent =
+          `${_user.first_name} ${_user.last_name}`;
+        document.getElementById('remainingSessions').textContent =
+          _user.remaining_sessions;
+
+        function updateClock() {
+          const now = new Date();
+          const options = { year: 'numeric', month: 'long', day: 'numeric' };
+          const datePart = now.toLocaleDateString('en-US', options);
+          const hours = String(now.getHours()).padStart(2, '0');
+          const mins = String(now.getMinutes()).padStart(2, '0');
+          document.getElementById('displayDateTime').value =
+            `${datePart} - ${hours}:${mins}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+      }
+
+      // Show receipt button
+      document
+        .getElementById('showReceiptBtn')
+        .addEventListener('click', () => {
+          document.getElementById('receiptModal').classList.remove('hidden');
+        });
+    </script>
+    <script src="../js/student.js"></script>
+  </body>
+</html>

@@ -1,13 +1,18 @@
 <!doctype html>
 <html>
   <head>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <title>CCS Sit-in Monitoring System</title>
-    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <nav class="navbar">
-      <div class="logo">College of Computer Studies Sit-in Monitoring System</div>
+      <div class="logo">
+        College of Computer Studies Sit-in Monitoring System
+      </div>
       <ul class="nav-links">
         <li>Home</li>
         <li>Community</li>
@@ -18,10 +23,8 @@
     </nav>
 
     <div class="container">
-
       <!-- SPLIT CARD -->
       <div class="split-card">
-
         <!-- LEFT PANEL: Announcement -->
         <div class="split-left">
           <div class="announcement-header">
@@ -30,15 +33,18 @@
           </div>
 
           <div class="announcement-list">
-
             <div class="announcement-item">
               <div class="announcement-meta">
                 <span class="badge latest">Latest</span>
                 <span class="date">March 12, 2026</span>
               </div>
-              <div class="announcement-item-title">New Sit-in Monitoring Process</div>
+              <div class="announcement-item-title">
+                New Sit-in Monitoring Process
+              </div>
               <div class="announcement-body">
-                Starting this semester, all sit-in sessions must be logged through the CCS Monitoring System. Walk-in requests without prior registration will no longer be accommodated.
+                Starting this semester, all sit-in sessions must be logged
+                through the CCS Monitoring System. Walk-in requests without
+                prior registration will no longer be accommodated.
               </div>
               <a href="announcement.html" class="learn-more">Learn more →</a>
             </div>
@@ -47,9 +53,13 @@
               <div class="announcement-meta">
                 <span class="date">March 8, 2026</span>
               </div>
-              <div class="announcement-item-title">Lab Schedule Update for AY 2025–2026</div>
+              <div class="announcement-item-title">
+                Lab Schedule Update for AY 2025–2026
+              </div>
               <div class="announcement-body">
-                Laboratory schedules for the second semester have been updated. Students are advised to check their assigned lab rooms before their sit-in sessions.
+                Laboratory schedules for the second semester have been updated.
+                Students are advised to check their assigned lab rooms before
+                their sit-in sessions.
               </div>
               <a href="announcement.html" class="learn-more">Learn more →</a>
             </div>
@@ -58,9 +68,13 @@
               <div class="announcement-meta">
                 <span class="date">March 1, 2026</span>
               </div>
-              <div class="announcement-item-title">Sit-in Hour Limits Reminder</div>
+              <div class="announcement-item-title">
+                Sit-in Hour Limits Reminder
+              </div>
               <div class="announcement-body">
-                Each student is allowed a maximum of 30 sit-in hours per semester. Students who exceed the limit will need to coordinate with the lab-in-charge for special approval.
+                Each student is allowed a maximum of 30 sit-in hours per
+                semester. Students who exceed the limit will need to coordinate
+                with the lab-in-charge for special approval.
               </div>
               <a href="announcement.html" class="learn-more">Learn more →</a>
             </div>
@@ -69,46 +83,72 @@
               <div class="announcement-meta">
                 <span class="date">February 20, 2026</span>
               </div>
-              <div class="announcement-item-title">System Maintenance Notice</div>
+              <div class="announcement-item-title">
+                System Maintenance Notice
+              </div>
               <div class="announcement-body">
-                The CCS Sit-in Monitoring System will undergo scheduled maintenance every Saturday from 10:00 PM to 12:00 AM. Please plan your sessions accordingly.
+                The CCS Sit-in Monitoring System will undergo scheduled
+                maintenance every Saturday from 10:00 PM to 12:00 AM. Please
+                plan your sessions accordingly.
               </div>
               <a href="announcement.html" class="learn-more">Learn more →</a>
             </div>
-
           </div>
         </div>
 
         <!-- RIGHT PANEL: Login -->
         <div class="split-right">
           <form id="loginForm">
-            <div style="margin-bottom:28px; text-align:center;">
-              <h2 style="font-size:22px;font-weight:700;color:var(--text-dark);">Welcome back</h2>
-              <p style="font-size:13px;color:var(--text-mid);margin-top:4px;">Sign in to your account to continue</p>
+            <div style="margin-bottom: 28px; text-align: center">
+              <h2
+                style="
+                  font-size: 22px;
+                  font-weight: 700;
+                  color: var(--text-dark);
+                "
+              >
+                Welcome back
+              </h2>
+              <p
+                style="font-size: 13px; color: var(--text-mid); margin-top: 4px"
+              >
+                Sign in to your account to continue
+              </p>
             </div>
 
             <label for="loginId">ID Number</label>
-            <input type="text" id="loginId" placeholder="Enter your ID Number"/>
+            <input
+              type="text"
+              id="loginId"
+              placeholder="Enter your ID Number"
+            />
 
             <label for="loginPassword">Password</label>
-            <input type="password" id="loginPassword" placeholder="Enter your password"/>
+            <input
+              type="password"
+              id="loginPassword"
+              placeholder="Enter your password"
+            />
 
             <div class="login-options">
               <div class="remember">
-                <input type="checkbox" id="rememberMe"/>
+                <input type="checkbox" id="rememberMe" />
                 <span>Remember me</span>
               </div>
               <a href="#">Forgot password?</a>
             </div>
 
             <button type="submit" class="login-button">Login</button>
-            <p><strong>Don't have an account?</strong> <a href="register.html">Register</a></p>
+            <p>
+              <strong>Don't have an account?</strong>
+              <a href="register.html">Register</a>
+            </p>
           </form>
         </div>
-
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
   </body>
 </html>

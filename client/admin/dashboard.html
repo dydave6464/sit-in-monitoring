@@ -1,0 +1,356 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Admin – CCS Sit-in Monitoring</title>
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-layout">
+      <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-icon">🖥️</span>
+          <span class="brand-text">CCS Admin</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" data-section="dashboard">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-item" data-section="students">
+            <span class="nav-icon">👥</span>
+            <span>Students</span>
+          </a>
+
+          <!-- Records Dropdown -->
+          <div class="nav-dropdown">
+            <button class="nav-item nav-dropdown-btn" id="recordsDropBtn">
+              <span class="nav-icon">📋</span>
+              <span>Records</span>
+              <span class="dropdown-arrow">›</span>
+            </button>
+            <div class="nav-dropdown-menu" id="recordsMenu">
+              <a href="#" class="nav-sub-item" data-section="sitin-records">
+                Sit-in Records
+              </a>
+              <a href="#" class="nav-sub-item" data-section="reports">
+                Sit-in Reports
+              </a>
+              <a href="#" class="nav-sub-item" data-section="feedback">
+                Feedback Reports
+              </a>
+            </div>
+          </div>
+
+          <a href="#" class="nav-item" data-section="reservation">
+            <span class="nav-icon">📅</span>
+            <span>Reservation</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="admin-info">
+            <span class="admin-avatar">👤</span>
+            <div>
+              <div class="admin-name" id="sidebarAdminName">Admin</div>
+              <div class="admin-role">Administrator</div>
+            </div>
+          </div>
+          <button class="btn-sidebar-logout" id="adminLogoutBtn">
+            Log out
+          </button>
+        </div>
+      </aside>
+
+      <!-- ── MAIN CONTENT ────────────────────────────────────── -->
+      <main class="admin-main">
+        <!-- Top bar -->
+        <header class="admin-topbar">
+          <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+          <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        </header>
+
+        <!-- ── DASHBOARD SECTION ──────────────────────────────── -->
+        <section class="content-section active" id="section-dashboard">
+          <!-- Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue">👥</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statStudents">--</div>
+                <div class="stat-label">Students Registered</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">✅</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statActive">--</div>
+                <div class="stat-label">Currently Sit-in</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange">📈</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statTotal">--</div>
+                <div class="stat-label">Total Sit-in</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard grid: live table + announcements -->
+          <div class="dashboard-grid">
+            <!-- Live Sit-in Table -->
+            <div class="panel">
+              <div class="panel-header">
+                <h3>Live Sit-in <span class="live-dot"></span></h3>
+                <span class="panel-sub">Updates every 5 seconds</span>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table" id="liveTable">
+                  <thead>
+                    <tr>
+                      <th>ID Number</th>
+                      <th>Name</th>
+                      <th>Purpose</th>
+                      <th>Lab</th>
+                      <th>Time In</th>
+                    </tr>
+                  </thead>
+                  <tbody id="liveTableBody">
+                    <tr>
+                      <td colspan="5" class="empty-row">
+                        No active sit-in sessions
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Announcements Panel -->
+            <div class="panel">
+              <div class="panel-header">
+                <h3>📢 Announcements</h3>
+              </div>
+
+              <!-- Post new announcement -->
+              <div class="announce-form">
+                <input
+                  type="text"
+                  id="announceTitle"
+                  placeholder="Announcement title..."
+                />
+                <textarea
+                  id="announceBody"
+                  placeholder="Write announcement here..."
+                  rows="3"
+                ></textarea>
+                <button class="btn-primary-sm" id="postAnnounceBtn">
+                  Post Announcement
+                </button>
+              </div>
+
+              <!-- Posted announcements list -->
+              <div class="announce-list" id="announceList">
+                <div class="empty-row">Loading announcements...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── STUDENTS SECTION ───────────────────────────────── -->
+        <section class="content-section" id="section-students">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Students Information</h3>
+              <div class="panel-actions">
+                <input
+                  type="text"
+                  id="studentSearch"
+                  placeholder="Search student..."
+                  class="search-input"
+                />
+                <button class="btn-danger-sm" id="resetAllBtn">
+                  Reset All Sessions
+                </button>
+              </div>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="studentsTable">
+                <thead>
+                  <tr>
+                    <th>ID Number</th>
+                    <th>Name</th>
+                    <th>Course</th>
+                    <th>Year</th>
+                    <th>Sessions Left</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                  <tr>
+                    <td colspan="6" class="empty-row">Loading students...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── SIT-IN RECORDS SECTION ─────────────────────────── -->
+        <section class="content-section" id="section-sitin-records">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Sit-in Records</h3>
+              <input
+                type="text"
+                id="recordsSearch"
+                placeholder="Search records..."
+                class="search-input"
+              />
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="recordsTable">
+                <thead>
+                  <tr>
+                    <th>ID Number</th>
+                    <th>Name</th>
+                    <th>Purpose</th>
+                    <th>Lab</th>
+                    <th>Status</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                  </tr>
+                </thead>
+                <tbody id="recordsTableBody">
+                  <tr>
+                    <td colspan="7" class="empty-row">Loading records...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── REPORTS SECTION ────────────────────────────────── -->
+        <section class="content-section" id="section-reports">
+          <div class="reports-grid">
+            <!-- Doughnut: Sit-ins per Course -->
+            <div class="panel">
+              <div class="panel-header">
+                <h3>Sit-ins by Course</h3>
+                <span class="panel-sub"
+                  >Which departments use the lab most</span
+                >
+              </div>
+              <div class="reports-layout">
+                <div class="chart-wrapper">
+                  <canvas id="courseChart"></canvas>
+                  <div class="chart-center-label" id="courseCenterLabel"></div>
+                </div>
+                <div class="chart-legend" id="courseLegend"></div>
+              </div>
+            </div>
+
+            <!-- Bar: Sit-ins per Day of Week -->
+            <div class="panel">
+              <div class="panel-header">
+                <h3>Sit-ins by Day of Week</h3>
+                <span class="panel-sub">Which days are busiest</span>
+              </div>
+              <div class="reports-layout reports-layout-bar">
+                <div class="chart-wrapper chart-wrapper-bar">
+                  <canvas id="dayChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── FEEDBACK SECTION ───────────────────────────────── -->
+        <section class="content-section" id="section-feedback">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Feedback Reports</h3>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Feedback</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="3" class="empty-row">No feedback yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── RESERVATION SECTION ────────────────────────────── -->
+        <section class="content-section" id="section-reservation">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Reservations</h3>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID Number</th>
+                    <th>Student Name</th>
+                    <th>Lab</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="5" class="empty-row">No reservations yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ── EDIT SESSIONS MODAL ─────────────────────────────────── -->
+    <div class="modal-overlay hidden" id="editSessionModal">
+      <div class="modal-card modal-sm">
+        <div class="modal-header">
+          <h3>Edit Sessions</h3>
+          <button class="modal-close" id="closeEditModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-student-name" id="editStudentName"></p>
+          <label>Remaining Sessions</label>
+          <input type="number" id="editSessionsInput" min="0" max="30" />
+          <input type="hidden" id="editStudentId" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="closeEditModal2">Cancel</button>
+          <button class="btn-primary-sm" id="saveSessionsBtn">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

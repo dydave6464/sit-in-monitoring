@@ -93,7 +93,7 @@ body {
 /* ── SPLIT CARD ──────────────────────────────── */
 .split-card {
   display: flex;
-  width: 1200px;
+  width: 900px;
   min-height: 540px;
   border-radius: 20px;
   box-shadow: var(--shadow-md);
@@ -355,7 +355,7 @@ select.selected {
 
 /* ── REGISTER PAGE ───────────────────────────── */
 .register-container {
-  width: 700px;
+  width: 480px;
   margin: 40px auto 60px;
   background: var(--white);
   border-radius: 20px;
@@ -456,4 +456,96 @@ select.selected {
 }
 .toast-success {
   background: #38a169;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+
+/* 1280px and below (common school monitors) */
+@media (max-width: 1280px) {
+  .split-card {
+    width: 90%;
+    max-width: 900px;
+  }
+  .register-container {
+    width: 90%;
+    max-width: 480px;
+  }
+}
+
+/* Tablets and small laptops */
+@media (max-width: 900px) {
+  .split-card {
+    flex-direction: column;
+    width: 95%;
+    max-width: 520px;
+    min-height: unset;
+  }
+  .split-left {
+    width: 100%;
+    max-height: 320px;
+  }
+  .split-right {
+    width: 100%;
+    padding: 36px 28px;
+  }
+  .navbar {
+    padding: 0 20px;
+  }
+  .logo {
+    font-size: 13px;
+  }
+  .nav-links li {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .navbar {
+    padding: 0 16px;
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .logo {
+    font-size: 12px;
+  }
+  .nav-links {
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+  .nav-links li {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  .split-card {
+    width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .split-left {
+    max-height: 260px;
+  }
+  .split-right {
+    padding: 28px 20px;
+  }
+  .register-container {
+    width: 100%;
+    border-radius: 0;
+    margin: 0;
+    padding: 28px 20px 40px;
+    min-height: calc(100vh - 56px);
+  }
+  .toast {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: unset;
+    text-align: center;
+  }
 }
