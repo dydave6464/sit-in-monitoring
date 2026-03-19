@@ -10,15 +10,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ── ROUTES ────────────────────────────────────────────────────
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/sitin', require('./routes/sitin'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/announcements', require('./routes/announcement'));
 
-// Example of a protected route using verifyToken middleware:
-// const verifyToken = require('./middleware/auth');
-// const userRoutes = require('./routes/user');
-// app.use('/api/user', verifyToken, userRoutes);
+// ── HEALTH CHECK ──────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running.' });
+});
 
-// ── START SERVER ──────────────────────────────────────────────
+// ── START ─────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
