@@ -10,13 +10,14 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-pool.getConnection()
-  .then(conn => {
-    console.log("Database connected!");
+pool
+  .getConnection()
+  .then((conn) => {
+    console.log('Database connected!');
     conn.release();
   })
-  .catch(err => {
-    console.error("Database connection failed:", err);
+  .catch((err) => {
+    console.error('Database connection failed:', err);
   });
 
 module.exports = pool;
