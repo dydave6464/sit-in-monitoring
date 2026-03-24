@@ -266,11 +266,11 @@ async function loadHistory() {
           <td>${date}</td>
           <td><span class="status-badge status-${h.status}">${h.status}</span></td>
           <td>${isCompleted
-            ? hasFeedback
-              ? '<button class="btn-feedback" disabled>Submitted</button>'
-              : `<button class="btn-feedback" onclick="openFeedbackModal(${h.id})">Feedback</button>`
-            : '--'
-          }</td>
+          ? hasFeedback
+            ? '<button class="btn-feedback" disabled>Submitted</button>'
+            : `<button class="btn-feedback" onclick="openFeedbackModal(${h.id})">Feedback</button>`
+          : '--'
+        }</td>
         </tr>`;
     }).join('');
   } catch (err) {
@@ -390,7 +390,7 @@ avatarInput.addEventListener('change', async () => {
 function syncPanelHeight() {
   const sidebar = document.querySelector('.sidebar-card');
   if (!sidebar) return;
-  const h = sidebar.offsetHeight;
+  const h = sidebar.offsetHeight - 20;
   document.documentElement.style.setProperty('--sidebar-height', h + 'px');
 }
 
