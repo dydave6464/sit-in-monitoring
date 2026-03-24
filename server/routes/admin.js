@@ -168,6 +168,93 @@ router.delete(
   },
 );
 
+// ── LOOKUP STUDENT BY ID ─────────────────────────────────────
+// GET /api/admin/students/:id_number/lookup
+router.get(
+  '/students/:id_number/lookup',
+  verifyToken,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const [rows] = await pool.query(
+        `SELECT id_number, first_name, last_name, middle_name, course, course_level, remaining_sessions
+         FROM users WHERE id_number = ? AND role = 'student'`,
+        [req.params.id_number],
+      );
+      if (rows.length === 0)
+        return res.status(404).json({ message: 'Student not found.' });
+
+      // Check if student already has an active session
+      const [active] = await pool.query(
+        `SELECT id FROM sit_in_sessions WHERE id_number = ? AND status = 'active'`,
+        [req.params.id_number],
+      );
+
+      const student = rows[0];
+      student.has_active_session = active.length > 0;
+
+      return res.status(200).json({ student });
+    } catch (err) {
+      console.error('Lookup student error:', err);
+      return res.status(500).json({ message: 'Server error.' });
+    }
+  },
+);
+
+// ── ADMIN START SIT-IN ───────────────────────────────────────
+// POST /api/admin/sitin
+router.post('/sitin', verifyToken, adminOnly, async (req, res) => {
+  const { id_number, purpose, lab } = req.body;
+
+  if (!id_number || !purpose || !lab)
+    return res
+      .status(400)
+      .json({ message: 'ID number, purpose, and lab are required.' });
+
+  try {
+    // Verify student exists
+    const [userRows] = await pool.query(
+      `SELECT id_number, first_name, last_name, remaining_sessions
+       FROM users WHERE id_number = ? AND role = 'student'`,
+      [id_number],
+    );
+    if (userRows.length === 0)
+      return res.status(404).json({ message: 'Student not found.' });
+
+    const student = userRows[0];
+
+    if (student.remaining_sessions <= 0)
+      return res
+        .status(400)
+        .json({ message: 'Student has no remaining sessions.' });
+
+    // Check for existing active session
+    const [active] = await pool.query(
+      `SELECT id FROM sit_in_sessions WHERE id_number = ? AND status = 'active'`,
+      [id_number],
+    );
+    if (active.length > 0)
+      return res
+        .status(409)
+        .json({ message: 'Student already has an active sit-in session.' });
+
+    const student_name = `${student.first_name} ${student.last_name}`;
+
+    await pool.query(
+      `INSERT INTO sit_in_sessions (id_number, student_name, purpose, lab, status, last_heartbeat)
+       VALUES (?, ?, ?, ?, 'active', NOW())`,
+      [id_number, student_name, purpose, lab],
+    );
+
+    return res
+      .status(201)
+      .json({ message: `Sit-in started for ${student_name}.` });
+  } catch (err) {
+    console.error('Admin start sit-in error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 module.exports = router;
 
 // ── SSE (open — token via query param for EventSource) ────────

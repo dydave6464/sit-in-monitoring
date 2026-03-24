@@ -611,6 +611,102 @@ function startSSEWithToken() {
   evtSource.onerror = () => console.warn('SSE reconnecting...');
 }
 
+// ── SIT-IN SEARCH & MODAL ────────────────────────────────────
+const sitinModal = document.getElementById('sitinModal');
+const sitinSearchInput = document.getElementById('sitinSearchInput');
+const sitinSearchBtn = document.getElementById('sitinSearchBtn');
+
+function closeSitinModal() {
+  sitinModal.classList.add('hidden');
+}
+
+document.getElementById('closeSitinModal').addEventListener('click', closeSitinModal);
+document.getElementById('cancelSitinModal').addEventListener('click', closeSitinModal);
+sitinModal.addEventListener('click', (e) => {
+  if (e.target === sitinModal) closeSitinModal();
+});
+
+async function lookupStudent() {
+  const id = sitinSearchInput.value.trim();
+  if (!/^\d{8}$/.test(id)) {
+    showToast('Enter a valid 8-digit ID number.', 'error');
+    return;
+  }
+
+  try {
+    const { res, data } = await apiFetch(`/admin/students/${id}/lookup`);
+    if (!res.ok) {
+      showToast(data.message || 'Student not found.', 'error');
+      return;
+    }
+
+    const s = data.student;
+
+    if (s.has_active_session) {
+      showToast('Student already has an active sit-in session.', 'error');
+      return;
+    }
+
+    if (s.remaining_sessions <= 0) {
+      showToast('Student has no remaining sessions.', 'error');
+      return;
+    }
+
+    // Populate modal
+    document.getElementById('sitinIdNumber').textContent = s.id_number;
+    const fullName = [s.first_name, s.middle_name, s.last_name]
+      .filter(Boolean)
+      .join(' ');
+    document.getElementById('sitinStudentName').textContent = fullName;
+    document.getElementById('sitinCourseYear').textContent =
+      `${s.course || '--'} - Year ${s.course_level || '--'}`;
+    document.getElementById('sitinRemaining').textContent = s.remaining_sessions;
+
+    // Reset selects
+    document.getElementById('sitinPurpose').value = '';
+    document.getElementById('sitinLab').value = '';
+
+    sitinModal.classList.remove('hidden');
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
+}
+
+sitinSearchBtn.addEventListener('click', lookupStudent);
+sitinSearchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') lookupStudent();
+});
+
+// Submit sit-in
+document.getElementById('submitSitinBtn').addEventListener('click', async () => {
+  const id_number = document.getElementById('sitinIdNumber').textContent;
+  const purpose = document.getElementById('sitinPurpose').value;
+  const lab = document.getElementById('sitinLab').value;
+
+  if (!purpose || !lab) {
+    showToast('Purpose and lab are required.', 'error');
+    return;
+  }
+
+  try {
+    const { res, data } = await apiFetch('/admin/sitin', {
+      method: 'POST',
+      body: JSON.stringify({ id_number, purpose, lab }),
+    });
+
+    if (!res.ok) {
+      showToast(data.message || 'Failed to start sit-in.', 'error');
+      return;
+    }
+
+    closeSitinModal();
+    sitinSearchInput.value = '';
+    showToast(data.message, 'success');
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
+});
+
 // ── INIT ──────────────────────────────────────────────────────
 startSSEWithToken();
 loadAnnouncements();
