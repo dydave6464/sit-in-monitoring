@@ -16,8 +16,8 @@
     <nav class="dash-navbar">
       <div class="dash-logo">Dashboard</div>
       <ul class="dash-nav-links">
-        <li class="dash-nav-item active">Home</li>
-        <li class="dash-nav-item">History</li>
+        <li class="dash-nav-item active" data-tab="home">Home</li>
+        <li class="dash-nav-item" data-tab="history">History</li>
         <li class="dash-nav-item">Reservation</li>
         <li>
           <button class="btn-logout-nav" id="navLogoutBtn">Log out</button>
@@ -193,6 +193,60 @@
           </div>
         </div>
       </aside>
+    </div>
+
+    <!-- HISTORY SECTION (hidden by default) -->
+    <div class="history-section hidden" id="historySection">
+      <div class="history-panel">
+        <div class="panel-card">
+          <div class="panel-header">Session History</div>
+          <div class="table-wrapper">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Purpose</th>
+                  <th>Lab</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Feedback</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr>
+                  <td colspan="5" class="empty-state">Loading history...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEEDBACK MODAL -->
+    <div id="feedbackModal" class="modal-overlay hidden">
+      <div class="modal-card edit-modal" style="max-width:420px">
+        <div class="modal-header">
+          <h3>Submit Feedback</h3>
+          <button class="modal-close" id="closeFeedbackModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="feedbackSessionId" />
+          <label>Rating</label>
+          <div class="star-select" id="starSelect">
+            <span data-star="1">☆</span>
+            <span data-star="2">☆</span>
+            <span data-star="3">☆</span>
+            <span data-star="4">☆</span>
+            <span data-star="5">☆</span>
+          </div>
+          <label for="feedbackMessage">Comments (optional)</label>
+          <textarea id="feedbackMessage" rows="3" placeholder="Share your experience..."></textarea>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="cancelFeedbackModal">Cancel</button>
+            <button type="button" class="btn-primary" id="submitFeedbackBtn">Submit</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- EDIT PROFILE MODAL -->

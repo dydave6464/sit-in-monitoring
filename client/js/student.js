@@ -214,6 +214,132 @@ document.getElementById('navLogoutBtn').addEventListener('click', () => {
   window.location.href = '/index.html';
 });
 
+// ── TAB NAVIGATION ───────────────────────────────────────────
+const dashContainer = document.querySelector('.dash-container');
+const welcomeBanner = document.querySelector('.welcome-banner');
+const historySection = document.getElementById('historySection');
+const navTabs = document.querySelectorAll('.dash-nav-item[data-tab]');
+
+navTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    navTabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    if (tab.dataset.tab === 'history') {
+      dashContainer.classList.add('hidden');
+      welcomeBanner.classList.add('hidden');
+      historySection.classList.remove('hidden');
+      loadHistory();
+    } else {
+      dashContainer.classList.remove('hidden');
+      welcomeBanner.classList.remove('hidden');
+      historySection.classList.add('hidden');
+    }
+  });
+});
+
+// ── HISTORY ──────────────────────────────────────────────────
+async function loadHistory() {
+  const tbody = document.getElementById('historyTableBody');
+  try {
+    const { res, data } = await apiFetch('/sitin/history');
+    if (!res.ok || !data.history || data.history.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No session history yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.history.map(h => {
+      const date = new Date(h.created_at).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: '2-digit'
+      });
+      const hasFeedback = h.has_feedback > 0;
+      const isCompleted = h.status === 'completed';
+      return `
+        <tr>
+          <td>${escapeHtml(h.purpose)}</td>
+          <td>${escapeHtml(h.lab)}</td>
+          <td>${date}</td>
+          <td><span class="status-badge status-${h.status}">${h.status}</span></td>
+          <td>${isCompleted
+            ? hasFeedback
+              ? '<button class="btn-feedback" disabled>Submitted</button>'
+              : `<button class="btn-feedback" onclick="openFeedbackModal(${h.id})">Feedback</button>`
+            : '--'
+          }</td>
+        </tr>`;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Unable to load history.</td></tr>';
+  }
+}
+
+// ── FEEDBACK MODAL ───────────────────────────────────────────
+const feedbackModal = document.getElementById('feedbackModal');
+let selectedRating = 0;
+
+function openFeedbackModal(sessionId) {
+  document.getElementById('feedbackSessionId').value = sessionId;
+  document.getElementById('feedbackMessage').value = '';
+  selectedRating = 0;
+  updateStars(0);
+  feedbackModal.classList.remove('hidden');
+}
+
+function closeFeedbackModal() {
+  feedbackModal.classList.add('hidden');
+}
+
+document.getElementById('closeFeedbackModal').addEventListener('click', closeFeedbackModal);
+document.getElementById('cancelFeedbackModal').addEventListener('click', closeFeedbackModal);
+feedbackModal.addEventListener('click', (e) => {
+  if (e.target === feedbackModal) closeFeedbackModal();
+});
+
+// Star selection
+const starSelect = document.getElementById('starSelect');
+starSelect.querySelectorAll('span').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.dataset.star);
+    updateStars(selectedRating);
+  });
+  star.addEventListener('mouseenter', () => updateStars(parseInt(star.dataset.star)));
+  star.addEventListener('mouseleave', () => updateStars(selectedRating));
+});
+
+function updateStars(rating) {
+  starSelect.querySelectorAll('span').forEach(s => {
+    s.textContent = parseInt(s.dataset.star) <= rating ? '★' : '☆';
+    s.classList.toggle('active', parseInt(s.dataset.star) <= rating);
+  });
+}
+
+document.getElementById('submitFeedbackBtn').addEventListener('click', async () => {
+  if (selectedRating === 0) {
+    showToast('Please select a rating.');
+    return;
+  }
+
+  const session_id = document.getElementById('feedbackSessionId').value;
+  const message = document.getElementById('feedbackMessage').value.trim();
+
+  try {
+    const { res, data } = await apiFetch('/sitin/feedback', {
+      method: 'POST',
+      body: JSON.stringify({ session_id: parseInt(session_id), rating: selectedRating, message }),
+    });
+
+    if (!res.ok) {
+      showToast(data.message || 'Failed to submit feedback.');
+      return;
+    }
+
+    closeFeedbackModal();
+    showToast('Feedback submitted!', 'success');
+    loadHistory();
+  } catch (err) {
+    showToast('Cannot connect to server.');
+  }
+});
+
 // ── AVATAR UPLOAD ────────────────────────────────────────────
 const avatarClickable = document.getElementById('avatarClickable');
 const avatarInput = document.getElementById('avatarInput');
