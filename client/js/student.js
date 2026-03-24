@@ -2,14 +2,6 @@
 const user = requireStudent();
 if (!user) throw new Error('Not authenticated');
 
-// ── ELEMENTS ──────────────────────────────────────────────────
-const sitInForm = document.getElementById('sitInForm');
-const formSection = document.getElementById('formSection');
-const activeSection = document.getElementById('activeSection');
-const receiptModal = document.getElementById('receiptModal');
-const welcomeName = document.getElementById('welcomeName');
-const remainingSessions = document.getElementById('remainingSessions');
-
 // ── TOAST ─────────────────────────────────────────────────────
 function showToast(message, type = 'error') {
   const existing = document.querySelector('.toast');
@@ -27,176 +19,241 @@ function showToast(message, type = 'error') {
   }, 3000);
 }
 
-// ── FORMAT DATE ───────────────────────────────────────────────
-function formatDate(dateStr) {
-  const date = new Date(dateStr);
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  const datePart = date.toLocaleDateString('en-US', options);
-  const hours = String(date.getHours()).padStart(2, '0');
-  const mins = String(date.getMinutes()).padStart(2, '0');
-  return `${datePart} - ${hours}:${mins}`;
+// ── CAPITALIZE HELPER ─────────────────────────────────────────
+function titleCase(str) {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
 }
 
-// ── POPULATE RECEIPT ──────────────────────────────────────────
-function showReceipt(session) {
-  document.getElementById('rcptIdNumber').textContent = session.id_number;
-  document.getElementById('rcptName').textContent = session.student_name;
-  document.getElementById('rcptPurpose').textContent = session.purpose;
-  document.getElementById('rcptLab').textContent = session.lab;
-  document.getElementById('rcptDate').textContent = formatDate(
-    session.created_at,
-  );
-  document.getElementById('rcptStatus').textContent = 'Active';
-  receiptModal.classList.remove('hidden');
+// ── POPULATE STUDENT INFO SIDEBAR ────────────────────────────
+function populateInfo(u) {
+  const fullName = [u.first_name, u.middle_name, u.last_name]
+    .filter(Boolean)
+    .map(titleCase)
+    .join(' ');
+  document.getElementById('infoName').textContent = fullName;
+  document.getElementById('infoCourse').textContent = u.course || '--';
+  document.getElementById('infoYear').textContent = u.course_level || '--';
+  document.getElementById('infoEmail').textContent = u.email || '--';
+  document.getElementById('infoAddress').textContent = titleCase(u.address) || '--';
+  document.getElementById('infoSessions').textContent = u.remaining_sessions;
+
+  // Welcome banner
+  const heading = document.getElementById('welcomeHeading');
+  if (heading) heading.textContent = `Welcome back, ${titleCase(u.first_name)}!`;
+
+  // Avatar
+  setAvatar(u.profile_image);
 }
 
-// ── SHOW ACTIVE SESSION VIEW ──────────────────────────────────
-function showActiveView(session) {
-  formSection.classList.add('hidden');
-  activeSection.classList.remove('hidden');
-  showReceipt(session);
+function setAvatar(imagePath) {
+  const img = document.getElementById('avatarImage');
+  const svg = document.getElementById('avatarSvg');
+  if (imagePath) {
+    img.src = imagePath;
+    img.classList.remove('hidden');
+    svg.style.display = 'none';
+  } else {
+    img.classList.add('hidden');
+    svg.style.display = '';
+  }
 }
 
-// ── SHOW FORM VIEW ────────────────────────────────────────────
-function showFormView() {
-  formSection.classList.remove('hidden');
-  activeSection.classList.add('hidden');
-  receiptModal.classList.add('hidden');
+// ── LOAD PROFILE FROM SERVER ─────────────────────────────────
+async function loadProfile() {
+  try {
+    const { res, data } = await apiFetch('/auth/profile');
+    if (res.ok && data.user) {
+      populateInfo(data.user);
+      // Update localStorage so it stays in sync
+      localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+      return data.user;
+    }
+  } catch (err) {
+    console.warn('Failed to load profile:', err);
+  }
+  // Fallback to localStorage data
+  populateInfo(user);
+  return user;
 }
 
-// ── LOAD DASHBOARD ────────────────────────────────────────────
-async function loadDashboard() {
-  // Set welcome message
-  welcomeName.textContent = `${user.first_name} ${user.last_name}`;
-  remainingSessions.textContent = user.remaining_sessions;
+// ── LOAD ANNOUNCEMENTS ───────────────────────────────────────
+async function loadAnnouncements() {
+  const feed = document.getElementById('announcementFeed');
+  try {
+    const { res, data } = await apiFetch('/announcements');
+    if (!res.ok || !data.announcements || data.announcements.length === 0) {
+      feed.innerHTML = '<div class="empty-state">No announcements yet.</div>';
+      return;
+    }
+
+    feed.innerHTML = data.announcements
+      .map((a) => {
+        const date = new Date(a.created_at);
+        const formatted = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        });
+        return `
+          <div class="announcement-entry">
+            <span class="announcement-author">CCS Admin<span class="announcement-date">| ${formatted}</span></span>
+            ${a.title ? `<div class="announcement-title">${escapeHtml(a.title)}</div>` : ''}
+            <div class="announcement-text">${escapeHtml(a.body)}</div>
+          </div>`;
+      })
+      .join('');
+  } catch (err) {
+    feed.innerHTML = '<div class="empty-state">Unable to load announcements.</div>';
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── EDIT PROFILE MODAL ───────────────────────────────────────
+const editModal = document.getElementById('editProfileModal');
+const editForm = document.getElementById('editProfileForm');
+const navEditBtn = document.getElementById('navEditProfile');
+const closeEditBtn = document.getElementById('closeEditModal');
+const cancelEditBtn = document.getElementById('cancelEditModal');
+
+function openEditModal() {
+  // Pre-fill with current data from localStorage
+  const u = JSON.parse(localStorage.getItem('loggedInUser'));
+  document.getElementById('editIdNumber').value = u.id_number || '';
+  document.getElementById('editFirstName').value = u.first_name || '';
+  document.getElementById('editLastName').value = u.last_name || '';
+  document.getElementById('editMiddleName').value = u.middle_name || '';
+  document.getElementById('editEmail').value = u.email || '';
+  document.getElementById('editAddress').value = u.address || '';
+
+  // Set select values
+  const courseSelect = document.getElementById('editCourse');
+  courseSelect.value = u.course || '';
+  courseSelect.classList.toggle('selected', !!u.course);
+
+  const levelSelect = document.getElementById('editCourseLevel');
+  levelSelect.value = u.course_level ? String(u.course_level) : '';
+  levelSelect.classList.toggle('selected', !!u.course_level);
+
+  editModal.classList.remove('hidden');
+}
+
+function closeEditModal() {
+  editModal.classList.add('hidden');
+}
+
+navEditBtn.addEventListener('click', openEditModal);
+closeEditBtn.addEventListener('click', closeEditModal);
+cancelEditBtn.addEventListener('click', closeEditModal);
+
+// Close modal on overlay click
+editModal.addEventListener('click', (e) => {
+  if (e.target === editModal) closeEditModal();
+});
+
+// Submit profile edit
+editForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    first_name: document.getElementById('editFirstName').value.trim(),
+    last_name: document.getElementById('editLastName').value.trim(),
+    middle_name: document.getElementById('editMiddleName').value.trim(),
+    course: document.getElementById('editCourse').value,
+    course_level: document.getElementById('editCourseLevel').value,
+    email: document.getElementById('editEmail').value.trim(),
+    address: document.getElementById('editAddress').value.trim(),
+  };
+
+  if (!payload.first_name || !payload.last_name) {
+    showToast('First and last name are required.');
+    return;
+  }
 
   try {
-    // Check if student has an active session
-    const { res, data } = await apiFetch('/sitin/active');
+    const { res, data } = await apiFetch('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
 
     if (!res.ok) {
-      showToast('Failed to load session data.', 'error');
+      showToast(data.message || 'Failed to update profile.');
       return;
     }
 
-    if (data.session) {
-      // Already has active session — show receipt directly
-      showActiveView(data.session);
-    } else {
-      showFormView();
-    }
+    // Update sidebar and localStorage
+    populateInfo(data.user);
+    localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+    closeEditModal();
+    showToast('Profile updated successfully!', 'success');
   } catch (err) {
-    showToast('Cannot connect to server.', 'error');
-  }
-}
-
-// ── SUBMIT SIT-IN FORM ────────────────────────────────────────
-if (sitInForm) {
-  sitInForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const purpose = document.getElementById('purpose').value.trim();
-    const lab = document.getElementById('lab').value.trim();
-
-    if (!purpose) {
-      showToast('Please enter your purpose.', 'error');
-      return;
-    }
-    if (!lab) {
-      showToast('Please enter the lab number.', 'error');
-      return;
-    }
-
-    try {
-      const { res, data } = await apiFetch('/sitin/start', {
-        method: 'POST',
-        body: JSON.stringify({ purpose, lab }),
-      });
-
-      if (!res.ok) {
-        showToast(data.message, 'error');
-        return;
-      }
-
-      // Update remaining sessions display
-      remainingSessions.textContent = data.remaining_sessions;
-
-      // Update stored user
-      const updatedUser = {
-        ...user,
-        remaining_sessions: data.remaining_sessions,
-      };
-      localStorage.setItem('loggedInUser', JSON.stringify(updatedUser));
-
-      showToast('Sit-in started!', 'success');
-      showActiveView(data.session);
-      startHeartbeat();
-    } catch (err) {
-      showToast('Cannot connect to server.', 'error');
-    }
-  });
-}
-
-// ── LOGOUT (end sit-in) ───────────────────────────────────────
-const logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', async function () {
-    if (
-      !confirm('Are you sure you want to log out? This will deduct 1 session.')
-    )
-      return;
-
-    try {
-      const { res, data } = await apiFetch('/sitin/end', { method: 'POST' });
-
-      if (!res.ok) {
-        showToast(data.message, 'error');
-        return;
-      }
-
-      stopHeartbeat();
-      clearSession();
-      showToast('Logged out successfully. Session deducted.', 'success');
-      setTimeout(() => (window.location.href = '/index.html'), 1200);
-    } catch (err) {
-      showToast('Cannot connect to server.', 'error');
-    }
-  });
-}
-
-// ── HEARTBEAT ─────────────────────────────────────────────────
-let heartbeatInterval = null;
-
-function startHeartbeat() {
-  // Send immediately then every 30 seconds
-  sendHeartbeat();
-  heartbeatInterval = setInterval(sendHeartbeat, 30000);
-}
-
-function stopHeartbeat() {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    heartbeatInterval = null;
-  }
-}
-
-async function sendHeartbeat() {
-  try {
-    await apiFetch('/sitin/heartbeat', { method: 'POST' });
-  } catch (err) {
-    console.warn('Heartbeat failed:', err);
-  }
-}
-
-// ── WARN BEFORE CLOSING TAB ───────────────────────────────────
-window.addEventListener('beforeunload', function (e) {
-  const session = document.getElementById('receiptModal');
-  if (session && !session.classList.contains('hidden')) {
-    e.preventDefault();
-    e.returnValue =
-      'You have an active sit-in session. Please log out properly so your session is recorded.';
+    showToast('Cannot connect to server.');
   }
 });
 
-// ── INIT ──────────────────────────────────────────────────────
-loadDashboard();
+// Select color fix for edit modal
+document.querySelectorAll('.edit-modal select').forEach((sel) => {
+  sel.addEventListener('change', function () {
+    this.classList.toggle('selected', this.value !== '');
+  });
+});
+
+// ── LOGOUT ───────────────────────────────────────────────────
+document.getElementById('navLogoutBtn').addEventListener('click', () => {
+  if (!confirm('Are you sure you want to log out?')) return;
+  clearSession();
+  window.location.href = '/index.html';
+});
+
+// ── AVATAR UPLOAD ────────────────────────────────────────────
+const avatarClickable = document.getElementById('avatarClickable');
+const avatarInput = document.getElementById('avatarInput');
+
+avatarClickable.addEventListener('click', () => avatarInput.click());
+
+avatarInput.addEventListener('change', async () => {
+  const file = avatarInput.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/auth/profile/avatar', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast(data.message || 'Upload failed.');
+      return;
+    }
+
+    setAvatar(data.profile_image);
+    // Update localStorage
+    const u = JSON.parse(localStorage.getItem('loggedInUser'));
+    u.profile_image = data.profile_image;
+    localStorage.setItem('loggedInUser', JSON.stringify(u));
+    showToast('Profile photo updated!', 'success');
+  } catch (err) {
+    showToast('Cannot connect to server.');
+  }
+  // Reset input so same file can be re-selected
+  avatarInput.value = '';
+});
+
+// ── INIT ─────────────────────────────────────────────────────
+loadProfile();
+loadAnnouncements();
