@@ -386,6 +386,17 @@ avatarInput.addEventListener('change', async () => {
   avatarInput.value = '';
 });
 
+// ── SYNC PANEL HEIGHT TO SIDEBAR ─────────────────────────────
+function syncPanelHeight() {
+  const sidebar = document.querySelector('.sidebar-card');
+  if (!sidebar) return;
+  const h = sidebar.offsetHeight;
+  document.documentElement.style.setProperty('--sidebar-height', h + 'px');
+}
+
+window.addEventListener('load', () => setTimeout(syncPanelHeight, 100));
+window.addEventListener('resize', syncPanelHeight);
+
 // ── INIT ─────────────────────────────────────────────────────
 loadProfile();
 loadAnnouncements();
