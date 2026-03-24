@@ -85,11 +85,78 @@ document.getElementById('sidebarToggle').addEventListener('click', () => {
   document.getElementById('sidebar').classList.toggle('open');
 });
 
+// ── PROFILE DROPDOWN ─────────────────────────────────────────
+const profileBtn = document.getElementById('adminProfileBtn');
+const profileMenu = document.getElementById('profileMenu');
+
+profileBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileMenu.classList.toggle('open');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.admin-profile-dropdown')) {
+    profileMenu.classList.remove('open');
+  }
+});
+
 // ── LOGOUT ────────────────────────────────────────────────────
 document.getElementById('adminLogoutBtn').addEventListener('click', () => {
   if (!confirm('Are you sure you want to log out?')) return;
   clearSession();
   window.location.href = '/index.html';
+});
+
+// ── CHANGE PASSWORD ──────────────────────────────────────────
+const pwModal = document.getElementById('changePasswordModal');
+
+document.getElementById('changePasswordBtn').addEventListener('click', () => {
+  profileMenu.classList.remove('open');
+  document.getElementById('currentPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  pwModal.classList.remove('hidden');
+});
+
+document.getElementById('closePasswordModal').addEventListener('click', () => pwModal.classList.add('hidden'));
+document.getElementById('cancelPasswordModal').addEventListener('click', () => pwModal.classList.add('hidden'));
+pwModal.addEventListener('click', (e) => { if (e.target === pwModal) pwModal.classList.add('hidden'); });
+
+document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+  const current_password = document.getElementById('currentPassword').value;
+  const new_password = document.getElementById('newPassword').value;
+  const confirm_password = document.getElementById('confirmPassword').value;
+
+  if (!current_password || !new_password || !confirm_password) {
+    showToast('All fields are required.', 'error');
+    return;
+  }
+  if (new_password.length < 6) {
+    showToast('New password must be at least 6 characters.', 'error');
+    return;
+  }
+  if (new_password !== confirm_password) {
+    showToast('New passwords do not match.', 'error');
+    return;
+  }
+
+  try {
+    const { res, data } = await apiFetch('/auth/change-password', {
+      method: 'PUT',
+      body: JSON.stringify({ current_password, new_password }),
+    });
+
+    if (!res.ok) {
+      showToast(data.message || 'Failed to change password.', 'error');
+      return;
+    }
+
+    pwModal.classList.add('hidden');
+    showToast('Password changed successfully!', 'success');
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
 });
 
 // ── TOAST ─────────────────────────────────────────────────────
