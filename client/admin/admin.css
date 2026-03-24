@@ -692,6 +692,28 @@
 }
 
 /* ── MODAL ───────────────────────────────────────────────────── */
+/* ── MODAL OVERLAY ──────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 30, 60, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.hidden {
+  display: none;
+}
+.modal-card {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(31, 79, 148, 0.2);
+  overflow: hidden;
+  animation: fadeUp 0.3s ease both;
+}
+
 /* ── SIT-IN MODAL ───────────────────────────────────────────── */
 .modal-sitin {
   width: 460px;
@@ -723,6 +745,33 @@
 }
 .sitin-sessions-badge {
   color: var(--blue-main);
+}
+
+.modal-body label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+}
+
+.modal-body select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-dark);
+  background: var(--bg);
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+.modal-body select:focus {
+  border-color: var(--blue-main);
+  box-shadow: 0 0 0 3px rgba(45, 123, 229, 0.1);
 }
 
 .modal-sm {
