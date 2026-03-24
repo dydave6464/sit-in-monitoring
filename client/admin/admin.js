@@ -102,8 +102,14 @@ document.addEventListener('click', (e) => {
 });
 
 // ── LOGOUT ────────────────────────────────────────────────────
-document.getElementById('adminLogoutBtn').addEventListener('click', () => {
-  if (!confirm('Are you sure you want to log out?')) return;
+document.getElementById('adminLogoutBtn').addEventListener('click', async () => {
+  const ok = await showConfirm({
+    title: 'Log out?',
+    message: 'You will be redirected to the login page.',
+    confirmText: 'Log out',
+    type: 'info',
+  });
+  if (!ok) return;
   clearSession();
   window.location.href = '/index.html';
 });
@@ -293,7 +299,13 @@ document
   });
 
 async function deleteAnnouncement(id) {
-  if (!confirm('Delete this announcement?')) return;
+  const ok = await showConfirm({
+    title: 'Delete announcement?',
+    message: 'This announcement will be permanently removed.',
+    confirmText: 'Delete',
+    type: 'danger',
+  });
+  if (!ok) return;
   try {
     const { res, data } = await apiFetch(`/announcements/${id}`, {
       method: 'DELETE',
@@ -361,7 +373,13 @@ document.getElementById('studentSearch').addEventListener('input', function () {
 
 // Reset all sessions
 document.getElementById('resetAllBtn').addEventListener('click', async () => {
-  if (!confirm('Reset ALL student sessions back to 30?')) return;
+  const ok = await showConfirm({
+    title: 'Reset all sessions?',
+    message: 'This will set every student\'s remaining sessions back to 30.',
+    confirmText: 'Reset All',
+    type: 'danger',
+  });
+  if (!ok) return;
   try {
     // Update each student's sessions to 30
     const promises = allStudents.map((s) =>
@@ -430,7 +448,13 @@ document
 
 // Delete student
 async function deleteStudent(id_number) {
-  if (!confirm(`Delete student ${id_number}? This cannot be undone.`)) return;
+  const ok = await showConfirm({
+    title: 'Delete student?',
+    message: `Student ${id_number} and all their records will be permanently deleted.`,
+    confirmText: 'Delete',
+    type: 'danger',
+  });
+  if (!ok) return;
   try {
     const { res, data } = await apiFetch(`/admin/students/${id_number}`, {
       method: 'DELETE',
@@ -490,7 +514,13 @@ function renderRecords(list) {
 }
 
 async function adminLogoutSession(sessionId) {
-  if (!confirm('End this sit-in session?')) return;
+  const ok = await showConfirm({
+    title: 'End sit-in session?',
+    message: 'This will log out the student from their current session.',
+    confirmText: 'End Session',
+    type: 'warning',
+  });
+  if (!ok) return;
   try {
     const { res, data } = await apiFetch(`/admin/sitin/${sessionId}/end`, {
       method: 'POST',

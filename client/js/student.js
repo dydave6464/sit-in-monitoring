@@ -208,8 +208,14 @@ document.querySelectorAll('.edit-modal select').forEach((sel) => {
 });
 
 // ── LOGOUT ───────────────────────────────────────────────────
-document.getElementById('navLogoutBtn').addEventListener('click', () => {
-  if (!confirm('Are you sure you want to log out?')) return;
+document.getElementById('navLogoutBtn').addEventListener('click', async () => {
+  const ok = await showConfirm({
+    title: 'Log out?',
+    message: 'You will be redirected to the login page.',
+    confirmText: 'Log out',
+    type: 'info',
+  });
+  if (!ok) return;
   clearSession();
   window.location.href = '/index.html';
 });
