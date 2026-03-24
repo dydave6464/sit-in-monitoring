@@ -74,7 +74,7 @@ router.put(
 router.get('/records', verifyToken, adminOnly, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT s.*, u.course, u.course_level
+      `SELECT s.*, u.course, u.course_level, u.remaining_sessions
        FROM sit_in_sessions s
        JOIN users u ON s.id_number = u.id_number
        ORDER BY s.created_at DESC`,
@@ -167,6 +167,35 @@ router.delete(
     }
   },
 );
+
+// ── END SIT-IN (Admin logout student) ────────────────────────
+// POST /api/admin/sitin/:id/end
+router.post('/sitin/:id/end', verifyToken, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, id_number FROM sit_in_sessions WHERE id = ? AND status = 'active'`,
+      [req.params.id],
+    );
+    if (rows.length === 0)
+      return res.status(404).json({ message: 'No active session found.' });
+
+    await pool.query(
+      `UPDATE sit_in_sessions SET status = 'completed', ended_at = NOW() WHERE id = ?`,
+      [req.params.id],
+    );
+
+    await pool.query(
+      `UPDATE users SET remaining_sessions = remaining_sessions - 1
+       WHERE id_number = ? AND remaining_sessions > 0`,
+      [rows[0].id_number],
+    );
+
+    return res.status(200).json({ message: 'Student logged out successfully.' });
+  } catch (err) {
+    console.error('Admin end sit-in error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
 
 // ── LOOKUP STUDENT BY ID ─────────────────────────────────────
 // GET /api/admin/students/:id_number/lookup
