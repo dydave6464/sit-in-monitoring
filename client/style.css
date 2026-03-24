@@ -357,6 +357,10 @@ select.selected {
   backdrop-filter: blur(3px);
 }
 
+.modal-overlay.confirm-hidden {
+  display: none !important;
+}
+
 .forgot-card {
   background: var(--white);
   border-radius: 18px;
