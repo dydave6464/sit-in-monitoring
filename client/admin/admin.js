@@ -937,8 +937,13 @@ function exportToExcel(headers, rows, filename) {
 }
 
 function exportToPDF(headers, rows, filename, title) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const jsPDFLib = window.jspdf || window.jsPDF;
+  if (!jsPDFLib) {
+    showToast('PDF library failed to load. Try refreshing the page.', 'error');
+    return;
+  }
+  const jsPDFClass = jsPDFLib.jsPDF || jsPDFLib;
+  const doc = new jsPDFClass();
   doc.setFontSize(16);
   doc.text(title, 14, 20);
   doc.autoTable({ head: [headers], body: rows, startY: 30, styles: { fontSize: 9 } });
