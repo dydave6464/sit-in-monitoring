@@ -195,7 +195,7 @@ function formatDate(dateStr) {
 function startSSE() {
   const token = getToken();
   const evtSource = new EventSource(
-    `http://localhost:3000/api/admin/sse?token=${token}`,
+    `${window.location.origin}/api/admin/sse?token=${token}`,
   );
 
   evtSource.onmessage = function (e) {
@@ -715,7 +715,7 @@ function buildDayChart(records) {
 function startSSEWithToken() {
   const token = getToken();
   const evtSource = new EventSource(
-    `http://localhost:3000/api/admin/sse-open?token=${token}`,
+    `${window.location.origin}/api/admin/sse-open?token=${token}`,
   );
   evtSource.onmessage = function (e) {
     const { active, stats } = JSON.parse(e.data);
