@@ -235,6 +235,7 @@
   border-radius: 10px;
   padding: 0 4px 0 12px;
   transition: border-color 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
 }
 .topbar-search:focus-within {
   border-color: var(--blue-main);
@@ -247,21 +248,22 @@
   flex-shrink: 0;
 }
 .topbar-search input {
-  border: none;
-  background: transparent;
-  outline: none;
-  padding: 9px 10px;
-  font-size: 13px;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  padding: 9px 10px !important;
+  font-size: 13px !important;
   font-family: 'Poppins', sans-serif;
   color: var(--text-dark);
-  width: 200px;
-  margin-bottom: 0;
-  box-shadow: none;
-  border-radius: 0;
+  width: 200px !important;
+  margin-bottom: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 .topbar-search input:focus {
-  border: none;
-  box-shadow: none;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 .topbar-search input::placeholder {
   color: var(--text-light);
