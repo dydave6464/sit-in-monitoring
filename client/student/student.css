@@ -86,11 +86,18 @@
   grid-template-columns: 280px 1fr 320px;
   gap: 24px;
   padding: 28px 32px;
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px - 82px);
   background: var(--bg);
+  overflow: hidden;
 }
 
 /* ── SIDEBAR (Student Info) ─────────────────────────────────── */
+.dash-sidebar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
 .sidebar-card {
   background: var(--white);
   border-radius: 16px;
@@ -259,7 +266,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 56px);
+  height: 100%;
   animation: fadeUp 0.4s ease both;
 }
 
@@ -659,6 +666,8 @@ input:disabled {
   .dash-container {
     grid-template-columns: 1fr;
     padding: 16px;
+    height: auto;
+    overflow: visible;
   }
   .dash-sidebar {
     order: -1;
