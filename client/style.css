@@ -345,6 +345,41 @@ select.selected {
   background: #38a169;
 }
 
+/* ── PASSWORD TOGGLE ────────────────────────────────────────── */
+.pw-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pw-wrapper input {
+  padding-right: 42px !important;
+}
+
+.pw-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(calc(-50% - 8px));
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  transition: color 0.2s;
+}
+
+.pw-toggle:hover {
+  color: var(--text-mid);
+}
+
+.pw-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* ── FORGOT PASSWORD MODAL ──────────────────────────────────── */
 .modal-overlay {
   position: fixed;
