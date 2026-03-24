@@ -25,6 +25,10 @@ function showSection(sectionId) {
   navItems.forEach((n) => n.classList.remove('active'));
   subItems.forEach((n) => n.classList.remove('active'));
 
+  // Always reset records dropdown highlight
+  document.getElementById('recordsDropBtn').classList.remove('active');
+  document.querySelector('.nav-dropdown').classList.remove('open');
+
   const target = document.getElementById('section-' + sectionId);
   if (target) target.classList.add('active');
 
@@ -267,8 +271,8 @@ function renderStudents(list) {
     <tr>
       <td>${s.id_number}</td>
       <td>${s.last_name}, ${s.first_name}</td>
-      <td>${s.course || '--'}</td>
       <td>${s.course_level || '--'}</td>
+      <td>${s.course || '--'}</td>
       <td>${s.remaining_sessions}</td>
       <td>
         <button class="btn-edit" onclick="openEditModal('${s.id_number}', '${s.last_name}, ${s.first_name}', ${s.remaining_sessions})">Edit</button>
@@ -401,24 +405,42 @@ function renderRecords(list) {
   const tbody = document.getElementById('recordsTableBody');
   if (!list || list.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="7" class="empty-row">No records yet.</td></tr>';
+      '<tr><td colspan="8" class="empty-row">No records yet.</td></tr>';
     return;
   }
   tbody.innerHTML = list
     .map(
       (r) => `
     <tr>
+      <td>${r.id}</td>
       <td>${r.id_number}</td>
       <td>${r.student_name}</td>
       <td>${r.purpose}</td>
       <td>${r.lab}</td>
+      <td>${r.remaining_sessions !== undefined ? r.remaining_sessions : '--'}</td>
       <td><span class="status-badge status-${r.status}">${r.status}</span></td>
-      <td>${formatDate(r.created_at)}</td>
-      <td>${r.ended_at ? formatDate(r.ended_at) : '--'}</td>
+      <td>${r.status === 'active' ? `<button class="btn-danger-sm" onclick="adminLogoutSession(${r.id})">Logout</button>` : '--'}</td>
     </tr>
   `,
     )
     .join('');
+}
+
+async function adminLogoutSession(sessionId) {
+  if (!confirm('End this sit-in session?')) return;
+  try {
+    const { res, data } = await apiFetch(`/admin/sitin/${sessionId}/end`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      showToast(data.message || 'Failed to end session.', 'error');
+      return;
+    }
+    showToast(data.message, 'success');
+    loadRecords();
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
 }
 
 document.getElementById('recordsSearch').addEventListener('input', function () {
