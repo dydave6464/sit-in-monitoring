@@ -13,190 +13,257 @@
   </head>
   <body>
     <!-- NAVBAR -->
-    <nav class="navbar">
-      <div class="logo">CCS Sit-in Monitoring System</div>
-      <div class="nav-right">
-        <span class="nav-user">👤 <span id="welcomeName"></span></span>
-        <span class="nav-sessions"
-          >Sessions left: <strong id="remainingSessions">--</strong></span
-        >
-      </div>
+    <nav class="dash-navbar">
+      <div class="dash-logo">Dashboard</div>
+      <ul class="dash-nav-links">
+        <li class="dash-nav-item active">Home</li>
+        <li class="dash-nav-item">History</li>
+        <li class="dash-nav-item">Reservation</li>
+        <li>
+          <button class="btn-logout-nav" id="navLogoutBtn">Log out</button>
+        </li>
+      </ul>
     </nav>
 
-    <!-- MAIN -->
-    <div class="student-container">
-      <!-- SIT-IN FORM (shown when no active session) -->
-      <div id="formSection">
-        <div class="student-card">
-          <div class="card-header">
-            <h2>Sit-in Request</h2>
-            <p>Fill in the details below to start your sit-in session</p>
-          </div>
-
-          <form id="sitInForm">
-            <div class="form-row">
-              <div class="field-group">
-                <label>ID Number</label>
-                <input
-                  type="text"
-                  id="displayId"
-                  readonly
-                  class="readonly-input"
-                />
-              </div>
-              <div class="field-group">
-                <label>Student Name</label>
-                <input
-                  type="text"
-                  id="displayName"
-                  readonly
-                  class="readonly-input"
-                />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="field-group">
-                <label>Remaining Sessions</label>
-                <input
-                  type="text"
-                  id="displaySessions"
-                  readonly
-                  class="readonly-input"
-                />
-              </div>
-              <div class="field-group">
-                <label>Date & Time</label>
-                <input
-                  type="text"
-                  id="displayDateTime"
-                  readonly
-                  class="readonly-input"
-                />
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label>Purpose <span class="required">*</span></label>
-              <input
-                type="text"
-                id="purpose"
-                placeholder="e.g. Working on thesis, Practicing Java..."
-              />
-            </div>
-
-            <div class="field-group">
-              <label>Lab <span class="required">*</span></label>
-              <input type="text" id="lab" placeholder="e.g. 524, 526..." />
-            </div>
-
-            <button type="submit" class="btn-primary">
-              Submit Sit-in Request
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- ACTIVE SESSION VIEW (shown when session exists) -->
-      <div id="activeSection" class="hidden">
-        <div class="student-card active-card">
-          <div class="active-badge">● Active Session</div>
-          <h2>You have an active sit-in session</h2>
-          <p class="active-sub">
-            Show the receipt below to the working scholar
-          </p>
-          <button class="btn-show-receipt" id="showReceiptBtn">
-            View Receipt
-          </button>
-        </div>
-      </div>
+    <!-- WELCOME BANNER -->
+    <div class="welcome-banner">
+      <h1 id="welcomeHeading">Welcome back!</h1>
+      <p>CCS Sit-in Monitoring System</p>
     </div>
 
-    <!-- RECEIPT MODAL -->
-    <div id="receiptModal" class="modal-overlay hidden">
-      <div class="modal-card">
-        <div class="receipt-header">
-          <div class="receipt-logo">📋</div>
-          <h3>Sit-in Receipt</h3>
-          <p>College of Computer Studies</p>
-        </div>
+    <!-- MAIN 3-COLUMN LAYOUT -->
+    <div class="dash-container">
+      <!-- LEFT: Student Information -->
+      <aside class="dash-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-header">Student Information</div>
 
-        <div class="receipt-body">
-          <div class="receipt-row">
-            <span class="receipt-label">ID Number</span>
-            <span class="receipt-value" id="rcptIdNumber">--</span>
+          <div class="avatar-wrapper">
+            <div class="avatar-placeholder" id="avatarClickable">
+              <img id="avatarImage" class="avatar-img hidden" alt="avatar" />
+              <svg id="avatarSvg" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .66.54 1.2 1.2 1.2h16.8c.66 0 1.2-.54 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"
+                  fill="white"
+                />
+              </svg>
+              <div class="avatar-hover-overlay">
+                <span>+</span>
+              </div>
+            </div>
+            <input type="file" id="avatarInput" accept=".jpg,.jpeg,.png,.webp" hidden />
           </div>
-          <div class="receipt-row">
-            <span class="receipt-label">Student Name</span>
-            <span class="receipt-value" id="rcptName">--</span>
-          </div>
-          <div class="receipt-row">
-            <span class="receipt-label">Purpose</span>
-            <span class="receipt-value" id="rcptPurpose">--</span>
-          </div>
-          <div class="receipt-row">
-            <span class="receipt-label">Lab</span>
-            <span class="receipt-value" id="rcptLab">--</span>
-          </div>
-          <div class="receipt-row">
-            <span class="receipt-label">Date Generated</span>
-            <span class="receipt-value" id="rcptDate">--</span>
-          </div>
-          <div class="receipt-row">
-            <span class="receipt-label">Status</span>
-            <span class="receipt-value receipt-status" id="rcptStatus"
-              >Active</span
-            >
-          </div>
-        </div>
 
-        <div class="receipt-footer">
-          <p class="receipt-note">
-            ⚠️ Log out only when you are done with your session. Logging out
-            will deduct 1 session.
-          </p>
-          <button id="logoutBtn" class="btn-logout">
-            Log Out & End Session
+          <button class="btn-edit-profile" id="navEditProfile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            Edit Profile
           </button>
+
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <div>
+                <span class="info-label">Name:</span>
+                <span class="info-value" id="infoName">--</span>
+              </div>
+            </div>
+            <div class="info-row">
+              <span class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+              </span>
+              <div>
+                <span class="info-label">Course:</span>
+                <span class="info-value" id="infoCourse">--</span>
+              </div>
+            </div>
+            <div class="info-row">
+              <span class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+              </span>
+              <div>
+                <span class="info-label">Year:</span>
+                <span class="info-value" id="infoYear">--</span>
+              </div>
+            </div>
+            <div class="info-row">
+              <span class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </span>
+              <div>
+                <span class="info-label">Email:</span>
+                <span class="info-value" id="infoEmail">--</span>
+              </div>
+            </div>
+            <div class="info-row">
+              <span class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+              <div>
+                <span class="info-label">Address:</span>
+                <span class="info-value" id="infoAddress">--</span>
+              </div>
+            </div>
+            <div class="info-row">
+              <span class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </span>
+              <div>
+                <span class="info-label">Session:</span>
+                <span class="info-value" id="infoSessions">--</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </aside>
+
+      <!-- CENTER: Announcements -->
+      <main class="dash-main">
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            </span>
+            <span>Announcement</span>
+          </div>
+          <div class="announcement-feed" id="announcementFeed">
+            <div class="empty-state">No announcements yet.</div>
+          </div>
+        </div>
+      </main>
+
+      <!-- RIGHT: Rules & Regulations -->
+      <aside class="dash-rules">
+        <div class="panel-card">
+          <div class="panel-header">Rules and Regulation</div>
+          <div class="rules-content">
+            <h3>University of Cebu</h3>
+            <h4>COLLEGE OF INFORMATION &amp; COMPUTER STUDIES</h4>
+            <h4>LABORATORY RULES AND REGULATIONS</h4>
+            <p>
+              To avoid embarrassment and maintain camaraderie with your friends
+              and superiors at our laboratories, please observe the following:
+            </p>
+            <ol>
+              <li>
+                Maintain silence, proper decorum, and discipline inside the
+                laboratory. Mobile phones, walkmans and other personal pieces of
+                equipment must be switched off.
+              </li>
+              <li>
+                Games are not allowed inside the lab. This includes
+                computer-related games, card games and other games that may
+                disturb the operation of the lab.
+              </li>
+              <li>
+                Surfing the Internet is allowed only with the permission of the
+                instructor. Downloading and installing of software are strictly
+                prohibited.
+              </li>
+              <li>
+                Getting access to other websites not related to the course is
+                strictly prohibited.
+              </li>
+              <li>
+                Observe computer room rundown. This means all bags, diskettes
+                and other personal things should be deposited at the
+                counter.
+              </li>
+              <li>
+                Mutual respect is necessary to maintain camaraderie in the
+                laboratory.
+              </li>
+              <li>
+                Loitering inside the laboratory is not allowed.
+              </li>
+              <li>
+                Smoking, eating, and drinking inside the laboratory is strictly
+                prohibited.
+              </li>
+              <li>
+                Anyone who violates the above-mentioned rules will be asked to
+                leave the laboratory.
+              </li>
+              <li>
+                Anyone caught tampering or attempting to tamper with computer
+                equipment shall be subject to disciplinary action.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div id="editProfileModal" class="modal-overlay hidden">
+      <div class="modal-card edit-modal">
+        <div class="modal-header">
+          <h3>Edit Profile</h3>
+          <button class="modal-close" id="closeEditModal">&times;</button>
+        </div>
+        <form id="editProfileForm" class="modal-body">
+          <label for="editIdNumber">ID Number</label>
+          <input type="text" id="editIdNumber" disabled />
+
+          <label for="editFirstName">First Name</label>
+          <input type="text" id="editFirstName" required />
+
+          <label for="editLastName">Last Name</label>
+          <input type="text" id="editLastName" required />
+
+          <label for="editMiddleName">Middle Name</label>
+          <input type="text" id="editMiddleName" />
+
+          <label for="editCourse">Course</label>
+          <select id="editCourse" required>
+            <option value="">Select Course</option>
+            <option>Information Technology</option>
+            <option>Computer Engineering</option>
+            <option>Civil Engineering</option>
+            <option>Mechanical Engineering</option>
+            <option>Electrical Engineering</option>
+            <option>Industrial Engineering</option>
+            <option>Naval Architecture and Marine Engineering</option>
+            <option>Elementary Education (BEEd)</option>
+            <option>Secondary Education (BSEd)</option>
+            <option>Criminology</option>
+            <option>Commerce</option>
+            <option>Accountancy</option>
+            <option>Hotel and Restaurant Management</option>
+            <option>Customs Administration</option>
+            <option>Computer Secretarial</option>
+            <option>Industrial Psychology</option>
+            <option>AB Political Science</option>
+            <option>AB English</option>
+          </select>
+
+          <label for="editCourseLevel">Year Level</label>
+          <select id="editCourseLevel" required>
+            <option value="">Select Level</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+
+          <label for="editEmail">Email</label>
+          <input type="email" id="editEmail" />
+
+          <label for="editAddress">Address</label>
+          <input type="text" id="editAddress" />
+
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="cancelEditModal">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
       </div>
     </div>
 
     <script src="../js/api.js"></script>
-    <script>
-      // Pre-fill read-only fields
-      const _user = getUser();
-      if (_user) {
-        document.getElementById('displayId').value = _user.id_number;
-        document.getElementById('displayName').value =
-          `${_user.first_name} ${_user.last_name}`;
-        document.getElementById('displaySessions').value =
-          _user.remaining_sessions;
-        document.getElementById('welcomeName').textContent =
-          `${_user.first_name} ${_user.last_name}`;
-        document.getElementById('remainingSessions').textContent =
-          _user.remaining_sessions;
-
-        function updateClock() {
-          const now = new Date();
-          const options = { year: 'numeric', month: 'long', day: 'numeric' };
-          const datePart = now.toLocaleDateString('en-US', options);
-          const hours = String(now.getHours()).padStart(2, '0');
-          const mins = String(now.getMinutes()).padStart(2, '0');
-          document.getElementById('displayDateTime').value =
-            `${datePart} - ${hours}:${mins}`;
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
-      }
-
-      // Show receipt button
-      document
-        .getElementById('showReceiptBtn')
-        .addEventListener('click', () => {
-          document.getElementById('receiptModal').classList.remove('hidden');
-        });
-    </script>
     <script src="../js/student.js"></script>
   </body>
 </html>
