@@ -168,6 +168,45 @@ router.delete(
   },
 );
 
+// ── SIT-IN REPORTS (completed only) ──────────────────────────
+// GET /api/admin/reports
+router.get('/reports', verifyToken, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT s.id, s.id_number, s.student_name, s.purpose, s.lab,
+              s.created_at AS login_time, s.ended_at AS logout_time,
+              TIMESTAMPDIFF(MINUTE, s.created_at, s.ended_at) AS duration_minutes,
+              DATE(s.created_at) AS session_date
+       FROM sit_in_sessions s
+       WHERE s.status = 'completed'
+       ORDER BY s.created_at DESC`,
+    );
+    return res.status(200).json({ reports: rows });
+  } catch (err) {
+    console.error('Reports error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── FEEDBACK REPORTS ─────────────────────────────────────────
+// GET /api/admin/feedback
+router.get('/feedback', verifyToken, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT f.id, f.id_number, CONCAT(u.first_name, ' ', u.last_name) AS student_name,
+              f.lab, f.rating, f.message, f.created_at,
+              u.course
+       FROM feedback f
+       JOIN users u ON f.id_number = u.id_number
+       ORDER BY f.created_at DESC`,
+    );
+    return res.status(200).json({ feedback: rows });
+  } catch (err) {
+    console.error('Feedback reports error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // ── END SIT-IN (Admin logout student) ────────────────────────
 // POST /api/admin/sitin/:id/end
 router.post('/sitin/:id/end', verifyToken, adminOnly, async (req, res) => {

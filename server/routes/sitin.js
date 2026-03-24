@@ -165,4 +165,60 @@ router.post('/mark-abandoned', async (req, res) => {
   }
 });
 
+// ── STUDENT HISTORY ──────────────────────────────────────────
+// GET /api/sitin/history
+router.get('/history', verifyToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT s.id, s.purpose, s.lab, s.status, s.created_at, s.ended_at,
+              (SELECT COUNT(*) FROM feedback f WHERE f.session_id = s.id) AS has_feedback
+       FROM sit_in_sessions s
+       WHERE s.id_number = ? AND s.status IN ('completed', 'abandoned')
+       ORDER BY s.created_at DESC`,
+      [req.user.id],
+    );
+    return res.status(200).json({ history: rows });
+  } catch (err) {
+    console.error('History error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── SUBMIT FEEDBACK ──────────────────────────────────────────
+// POST /api/sitin/feedback
+router.post('/feedback', verifyToken, async (req, res) => {
+  const { session_id, rating, message } = req.body;
+
+  if (!session_id || !rating || rating < 1 || rating > 5)
+    return res.status(400).json({ message: 'Valid session ID and rating (1-5) required.' });
+
+  try {
+    // Verify session belongs to this student and is completed
+    const [sessions] = await pool.query(
+      `SELECT id, lab FROM sit_in_sessions WHERE id = ? AND id_number = ? AND status = 'completed'`,
+      [session_id, req.user.id],
+    );
+    if (sessions.length === 0)
+      return res.status(404).json({ message: 'Session not found or not completed.' });
+
+    // Check if already submitted
+    const [existing] = await pool.query(
+      'SELECT id FROM feedback WHERE session_id = ?',
+      [session_id],
+    );
+    if (existing.length > 0)
+      return res.status(409).json({ message: 'Feedback already submitted for this session.' });
+
+    await pool.query(
+      'INSERT INTO feedback (session_id, id_number, lab, rating, message) VALUES (?, ?, ?, ?, ?)',
+      [session_id, req.user.id, sessions[0].lab, rating, message || ''],
+    );
+
+    return res.status(201).json({ message: 'Feedback submitted!' });
+  } catch (err) {
+    console.error('Feedback error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 module.exports = router;

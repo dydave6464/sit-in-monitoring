@@ -45,6 +45,19 @@ CREATE TABLE IF NOT EXISTS announcements (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ── FEEDBACK ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS feedback (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  session_id     INT NOT NULL,
+  id_number      CHAR(8) NOT NULL,
+  lab            VARCHAR(100) NOT NULL,
+  rating         TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  message        TEXT,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (session_id) REFERENCES sit_in_sessions(id),
+  FOREIGN KEY (id_number) REFERENCES users(id_number)
+);
+
 -- ── DEFAULT ADMIN ACCOUNT ────────────────────────────────────
 -- Password: admin123 — change after first login
 INSERT INTO users (id_number, last_name, first_name, middle_name, password, role, remaining_sessions)
