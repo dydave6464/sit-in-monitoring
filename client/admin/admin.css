@@ -255,6 +255,13 @@
   font-family: 'Poppins', sans-serif;
   color: var(--text-dark);
   width: 200px;
+  margin-bottom: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+.topbar-search input:focus {
+  border: none;
+  box-shadow: none;
 }
 .topbar-search input::placeholder {
   color: var(--text-light);

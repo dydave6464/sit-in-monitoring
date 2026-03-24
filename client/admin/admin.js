@@ -43,6 +43,12 @@ function showSection(sectionId) {
 
   topbarTitle.textContent = sectionTitles[sectionId] || 'Dashboard';
 
+  // Show search only on dashboard
+  const topbarSearch = document.querySelector('.topbar-search');
+  if (topbarSearch) {
+    topbarSearch.style.display = sectionId === 'dashboard' ? 'flex' : 'none';
+  }
+
   // Load section data
   if (sectionId === 'students') loadStudents();
   if (sectionId === 'sitin-records') loadRecords();
