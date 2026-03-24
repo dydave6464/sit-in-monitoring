@@ -218,6 +218,36 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
 });
 
+// ── CHANGE PASSWORD ──────────────────────────────────────────
+// PUT /api/auth/change-password
+router.put('/change-password', verifyToken, async (req, res) => {
+  const { current_password, new_password } = req.body;
+
+  if (!current_password || !new_password)
+    return res.status(400).json({ message: 'Both current and new password are required.' });
+
+  if (new_password.length < 6)
+    return res.status(400).json({ message: 'New password must be at least 6 characters.' });
+
+  try {
+    const [rows] = await pool.query('SELECT password FROM users WHERE id_number = ?', [req.user.id]);
+    if (rows.length === 0)
+      return res.status(404).json({ message: 'User not found.' });
+
+    const isMatch = await bcrypt.compare(current_password, rows[0].password);
+    if (!isMatch)
+      return res.status(401).json({ message: 'Current password is incorrect.' });
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await pool.query('UPDATE users SET password = ? WHERE id_number = ?', [hashed, req.user.id]);
+
+    return res.status(200).json({ message: 'Password changed successfully.' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // ── UPLOAD PROFILE IMAGE ─────────────────────────────────────
 // POST /api/auth/profile/avatar
 router.post('/profile/avatar', verifyToken, (req, res) => {
