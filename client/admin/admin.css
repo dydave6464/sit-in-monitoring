@@ -940,6 +940,71 @@
   }
 }
 
+/* ── PAGINATION ─────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+}
+.pagination button {
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.pagination button:hover {
+  background: var(--blue-light);
+  color: var(--blue-main);
+}
+.pagination button.active {
+  background: var(--blue-main);
+  color: white;
+  border-color: var(--blue-main);
+}
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── EXPORT BUTTONS ─────────────────────────────────────────── */
+.export-btns {
+  display: flex;
+  gap: 6px;
+}
+.btn-export {
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-export:hover {
+  background: var(--blue-main);
+  color: white;
+  border-color: var(--blue-main);
+}
+
+/* ── STAR RATING ────────────────────────────────────────────── */
+.star-rating {
+  color: #d69e2e;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
 /* ── UTILITY ─────────────────────────────────────────────────── */
 .hidden {
   display: none !important;

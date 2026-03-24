@@ -56,7 +56,8 @@ function showSection(sectionId) {
   // Load section data
   if (sectionId === 'students') loadStudents();
   if (sectionId === 'sitin-records') loadRecords();
-  if (sectionId === 'reports') loadReports();
+  if (sectionId === 'reports') { loadReports(); loadReportsLog(); }
+  if (sectionId === 'feedback') loadFeedback();
   if (sectionId === 'dashboard') loadAnnouncements();
 }
 
@@ -252,7 +253,8 @@ async function loadStudents() {
       return;
     }
     allStudents = data.students;
-    renderStudents(allStudents);
+    studentsPage = 1;
+    renderStudentsPaginated();
   } catch (err) {
     showToast('Cannot connect to server.', 'error');
   }
@@ -286,15 +288,8 @@ function renderStudents(list) {
 
 // Search
 document.getElementById('studentSearch').addEventListener('input', function () {
-  const q = this.value.toLowerCase();
-  const filtered = allStudents.filter(
-    (s) =>
-      s.id_number.includes(q) ||
-      s.first_name.toLowerCase().includes(q) ||
-      s.last_name.toLowerCase().includes(q) ||
-      (s.course || '').toLowerCase().includes(q),
-  );
-  renderStudents(filtered);
+  studentsPage = 1;
+  renderStudentsPaginated();
 });
 
 // Reset all sessions
@@ -395,7 +390,8 @@ async function loadRecords() {
       return;
     }
     allRecords = data.records;
-    renderRecords(allRecords);
+    recordsPage = 1;
+    renderRecordsPaginated();
   } catch (err) {
     showToast('Cannot connect to server.', 'error');
   }
@@ -444,15 +440,8 @@ async function adminLogoutSession(sessionId) {
 }
 
 document.getElementById('recordsSearch').addEventListener('input', function () {
-  const q = this.value.toLowerCase();
-  const filtered = allRecords.filter(
-    (r) =>
-      r.id_number.includes(q) ||
-      r.student_name.toLowerCase().includes(q) ||
-      r.purpose.toLowerCase().includes(q) ||
-      r.lab.toLowerCase().includes(q),
-  );
-  renderRecords(filtered);
+  recordsPage = 1;
+  renderRecordsPaginated();
 });
 
 // ── REPORTS ───────────────────────────────────────────────────
@@ -637,6 +626,251 @@ function startSSEWithToken() {
     updateLiveTable(active);
   };
   evtSource.onerror = () => console.warn('SSE reconnecting...');
+}
+
+// ── PAGINATION UTILITY ────────────────────────────────────────
+const PAGE_SIZE = 10;
+
+function paginate(list, page) {
+  const start = (page - 1) * PAGE_SIZE;
+  return list.slice(start, start + PAGE_SIZE);
+}
+
+function renderPagination(containerId, totalItems, currentPage, onPageChange) {
+  const container = document.getElementById(containerId);
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  let html = `<button ${currentPage === 1 ? 'disabled' : ''} onclick="${onPageChange}(${currentPage - 1})">‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 7 && i > 3 && i < totalPages - 1 && Math.abs(i - currentPage) > 1) {
+      if (i === 4 || i === totalPages - 2) html += '<span style="padding:0 4px;color:var(--text-light)">…</span>';
+      continue;
+    }
+    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="${onPageChange}(${i})">${i}</button>`;
+  }
+  html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="${onPageChange}(${currentPage + 1})">›</button>`;
+  container.innerHTML = html;
+}
+
+// ── PAGINATED STUDENTS ───────────────────────────────────────
+let studentsPage = 1;
+
+function renderStudentsPaginated() {
+  const q = document.getElementById('studentSearch').value.toLowerCase();
+  const filtered = allStudents.filter(
+    (s) =>
+      s.id_number.includes(q) ||
+      s.first_name.toLowerCase().includes(q) ||
+      s.last_name.toLowerCase().includes(q) ||
+      (s.course || '').toLowerCase().includes(q),
+  );
+  renderStudents(paginate(filtered, studentsPage));
+  renderPagination('studentsPagination', filtered.length, studentsPage, 'goStudentsPage');
+}
+
+function goStudentsPage(p) { studentsPage = p; renderStudentsPaginated(); }
+
+// ── PAGINATED RECORDS ────────────────────────────────────────
+let recordsPage = 1;
+
+function renderRecordsPaginated() {
+  const q = document.getElementById('recordsSearch').value.toLowerCase();
+  const filtered = allRecords.filter(
+    (r) =>
+      String(r.id).includes(q) ||
+      r.id_number.includes(q) ||
+      r.student_name.toLowerCase().includes(q) ||
+      r.purpose.toLowerCase().includes(q) ||
+      r.lab.toLowerCase().includes(q),
+  );
+  renderRecords(paginate(filtered, recordsPage));
+  renderPagination('recordsPagination', filtered.length, recordsPage, 'goRecordsPage');
+}
+
+function goRecordsPage(p) { recordsPage = p; renderRecordsPaginated(); }
+
+// ── REPORTS LOG ──────────────────────────────────────────────
+let allReportsLog = [];
+let reportsLogPage = 1;
+
+async function loadReportsLog() {
+  try {
+    const { res, data } = await apiFetch('/admin/reports');
+    if (!res.ok) return;
+    allReportsLog = data.reports;
+    reportsLogPage = 1;
+    renderReportsLogPaginated();
+  } catch (err) {
+    console.error('Load reports log error:', err);
+  }
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return '--';
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDuration(mins) {
+  if (!mins && mins !== 0) return '--';
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return '--';
+  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+}
+
+function renderReportsLog(list) {
+  const tbody = document.getElementById('reportsLogBody');
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No completed sessions yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(r => `
+    <tr>
+      <td>${r.id_number}</td>
+      <td>${r.student_name}</td>
+      <td>${r.purpose}</td>
+      <td>${r.lab}</td>
+      <td>${formatTime(r.login_time)}</td>
+      <td>${formatTime(r.logout_time)}</td>
+      <td>${formatDuration(r.duration_minutes)}</td>
+      <td>${formatShortDate(r.session_date)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderReportsLogPaginated() {
+  const q = (document.getElementById('reportsSearch')?.value || '').toLowerCase();
+  const filtered = allReportsLog.filter(r =>
+    r.id_number.includes(q) ||
+    r.student_name.toLowerCase().includes(q) ||
+    r.purpose.toLowerCase().includes(q) ||
+    r.lab.toLowerCase().includes(q),
+  );
+  renderReportsLog(paginate(filtered, reportsLogPage));
+  renderPagination('reportsPagination', filtered.length, reportsLogPage, 'goReportsLogPage');
+}
+
+function goReportsLogPage(p) { reportsLogPage = p; renderReportsLogPaginated(); }
+
+document.getElementById('reportsSearch')?.addEventListener('input', function () {
+  reportsLogPage = 1;
+  renderReportsLogPaginated();
+});
+
+// ── FEEDBACK ─────────────────────────────────────────────────
+let allFeedback = [];
+let feedbackPage = 1;
+
+async function loadFeedback() {
+  try {
+    const { res, data } = await apiFetch('/admin/feedback');
+    if (!res.ok) return;
+    allFeedback = data.feedback;
+    feedbackPage = 1;
+    renderFeedbackPaginated();
+  } catch (err) {
+    console.error('Load feedback error:', err);
+  }
+}
+
+function renderStars(rating) {
+  return '<span class="star-rating">' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + '</span>';
+}
+
+function renderFeedbackTable(list) {
+  const tbody = document.getElementById('feedbackTableBody');
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">No feedback yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(f => `
+    <tr>
+      <td>${f.id_number}</td>
+      <td>${f.student_name}</td>
+      <td>${f.course || '--'}</td>
+      <td>${f.lab}</td>
+      <td>${renderStars(f.rating)}</td>
+      <td>${f.message || '--'}</td>
+      <td>${formatShortDate(f.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderFeedbackPaginated() {
+  const q = (document.getElementById('feedbackSearch')?.value || '').toLowerCase();
+  const filtered = allFeedback.filter(f =>
+    f.id_number.includes(q) ||
+    f.student_name.toLowerCase().includes(q) ||
+    (f.course || '').toLowerCase().includes(q) ||
+    f.lab.toLowerCase().includes(q),
+  );
+  renderFeedbackTable(paginate(filtered, feedbackPage));
+  renderPagination('feedbackPagination', filtered.length, feedbackPage, 'goFeedbackPage');
+}
+
+function goFeedbackPage(p) { feedbackPage = p; renderFeedbackPaginated(); }
+
+document.getElementById('feedbackSearch')?.addEventListener('input', function () {
+  feedbackPage = 1;
+  renderFeedbackPaginated();
+});
+
+// ── EXPORT UTILITIES ─────────────────────────────────────────
+function exportToCSV(headers, rows, filename) {
+  const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function exportToExcel(headers, rows, filename) {
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  XLSX.writeFile(wb, filename);
+}
+
+function exportToPDF(headers, rows, filename, title) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(title, 14, 20);
+  doc.autoTable({ head: [headers], body: rows, startY: 30, styles: { fontSize: 9 } });
+  doc.save(filename);
+}
+
+function exportReports(format) {
+  const headers = ['ID Number', 'Name', 'Purpose', 'Lab', 'Login', 'Logout', 'Duration', 'Date'];
+  const rows = allReportsLog.map(r => [
+    r.id_number, r.student_name, r.purpose, r.lab,
+    formatTime(r.login_time), formatTime(r.logout_time),
+    formatDuration(r.duration_minutes), formatShortDate(r.session_date),
+  ]);
+  const ts = new Date().toISOString().slice(0, 10);
+  if (format === 'csv') exportToCSV(headers, rows, `sit-in-reports-${ts}.csv`);
+  if (format === 'excel') exportToExcel(headers, rows, `sit-in-reports-${ts}.xlsx`);
+  if (format === 'pdf') exportToPDF(headers, rows, `sit-in-reports-${ts}.pdf`, 'CCS Sit-in Reports');
+}
+
+function exportFeedback(format) {
+  const headers = ['ID Number', 'Name', 'Course', 'Lab', 'Rating', 'Feedback', 'Date'];
+  const rows = allFeedback.map(f => [
+    f.id_number, f.student_name, f.course || '--', f.lab,
+    f.rating + '/5', f.message || '--', formatShortDate(f.created_at),
+  ]);
+  const ts = new Date().toISOString().slice(0, 10);
+  if (format === 'csv') exportToCSV(headers, rows, `feedback-reports-${ts}.csv`);
+  if (format === 'excel') exportToExcel(headers, rows, `feedback-reports-${ts}.xlsx`);
+  if (format === 'pdf') exportToPDF(headers, rows, `feedback-reports-${ts}.pdf`, 'CCS Feedback Reports');
 }
 
 // ── SIT-IN SEARCH & MODAL ────────────────────────────────────
