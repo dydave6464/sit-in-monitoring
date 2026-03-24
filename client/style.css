@@ -39,9 +39,6 @@ body {
     transform: translateY(0);
   }
 }
-.split-card {
-  animation: fadeUp 0.5s ease both;
-}
 
 /* NAVBAR */
 .navbar {
@@ -90,128 +87,18 @@ body {
   padding: 40px 24px;
 }
 
-/* ── SPLIT CARD ──────────────────────────────── */
-.split-card {
-  display: flex;
-  width: 900px;
-  min-height: 540px;
-  border-radius: 20px;
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-/* LEFT — dark announcement panel */
-.split-left {
-  width: 55%;
-  background: var(--blue-dark);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.announcement-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 22px 26px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-}
-.announcement-icon {
-  font-size: 20px;
-}
-.announcement-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0.02em;
-}
-
-.announcement-list {
-  overflow-y: auto;
-  flex: 1;
-  padding: 4px 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
-.announcement-list::-webkit-scrollbar {
-  width: 4px;
-}
-.announcement-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.announcement-item {
-  padding: 16px 26px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background 0.15s;
-}
-.announcement-item:last-child {
-  border-bottom: none;
-}
-.announcement-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.announcement-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-.badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 9px;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-.badge.latest {
-  background: var(--blue-main);
-  color: white;
-}
-.date {
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.45);
-}
-.announcement-item-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 5px;
-}
-.announcement-body {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.6;
-  margin-bottom: 8px;
-}
-.learn-more {
-  font-size: 12px;
-  font-weight: 600;
-  color: #7eb8ff;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-.learn-more:hover {
-  color: white;
-  text-decoration: underline;
-}
-
-/* RIGHT — white login panel */
-.split-right {
-  width: 45%;
+/* ── LOGIN CARD ──────────────────────────────── */
+.login-card {
+  width: 400px;
   background: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 20px;
   padding: 48px 40px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  animation: fadeUp 0.5s ease both;
 }
 
-.split-right form {
+.login-card form {
   width: 100%;
 }
 
@@ -338,18 +225,18 @@ select.selected {
 }
 
 /* Register link */
-.split-right form p {
+.register-link {
   text-align: center;
   margin-top: 18px;
   font-size: 13.5px;
   color: var(--text-mid);
 }
-.split-right form p a {
+.register-link a {
   color: var(--blue-main);
   font-weight: 600;
   text-decoration: none;
 }
-.split-right form p a:hover {
+.register-link a:hover {
   text-decoration: underline;
 }
 
@@ -460,33 +347,15 @@ select.selected {
 
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 
-/* 1280px and below (common school monitors) */
-@media (max-width: 1280px) {
-  .split-card {
+/* Tablets and small laptops */
+@media (max-width: 900px) {
+  .login-card {
     width: 90%;
-    max-width: 900px;
+    max-width: 400px;
   }
   .register-container {
     width: 90%;
     max-width: 480px;
-  }
-}
-
-/* Tablets and small laptops */
-@media (max-width: 900px) {
-  .split-card {
-    flex-direction: column;
-    width: 95%;
-    max-width: 520px;
-    min-height: unset;
-  }
-  .split-left {
-    width: 100%;
-    max-height: 320px;
-  }
-  .split-right {
-    width: 100%;
-    padding: 36px 28px;
   }
   .navbar {
     padding: 0 20px;
@@ -522,17 +391,10 @@ select.selected {
     font-size: 11px;
     padding: 4px 8px;
   }
-  .split-card {
+  .login-card {
     width: 100%;
     border-radius: 0;
-    border-left: none;
-    border-right: none;
-  }
-  .split-left {
-    max-height: 260px;
-  }
-  .split-right {
-    padding: 28px 20px;
+    padding: 36px 20px;
   }
   .register-container {
     width: 100%;
