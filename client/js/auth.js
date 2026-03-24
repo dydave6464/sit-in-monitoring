@@ -205,3 +205,258 @@ document.querySelectorAll('select').forEach((sel) => {
     this.classList.toggle('selected', this.value !== '');
   });
 });
+
+// ── FORGOT PASSWORD ──────────────────────────────────────────
+const forgotLink = document.getElementById('forgotPasswordLink');
+const forgotModal = document.getElementById('forgotModal');
+
+if (forgotLink && forgotModal) {
+  const step1 = document.getElementById('forgotStep1');
+  const step2 = document.getElementById('forgotStep2');
+  const step3 = document.getElementById('forgotStep3');
+  const forgotEmailInput = document.getElementById('forgotEmail');
+  const emailDisplay = document.getElementById('forgotEmailDisplay');
+  let forgotEmail = '';
+  let resendInterval = null;
+
+  function showStep(step) {
+    [step1, step2, step3].forEach((s) => s.classList.add('forgot-hidden'));
+    step.classList.remove('forgot-hidden');
+  }
+
+  function closeForgotModal() {
+    forgotModal.classList.add('confirm-hidden');
+    clearResendTimer();
+    // Reset all fields
+    forgotEmailInput.value = '';
+    document.querySelectorAll('.otp-box').forEach((b) => (b.value = ''));
+    document.getElementById('forgotNewPassword').value = '';
+    document.getElementById('forgotConfirmPassword').value = '';
+    showStep(step1);
+  }
+
+  // Open modal
+  forgotLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    forgotModal.classList.remove('confirm-hidden');
+    showStep(step1);
+    setTimeout(() => forgotEmailInput.focus(), 100);
+  });
+
+  // Close on overlay click
+  forgotModal.addEventListener('click', (e) => {
+    if (e.target === forgotModal) closeForgotModal();
+  });
+
+  // Back buttons
+  document.getElementById('forgotBackBtn1').addEventListener('click', closeForgotModal);
+  document.getElementById('forgotBackBtn2').addEventListener('click', closeForgotModal);
+
+  // ── Step 1: Send OTP ──
+  document.getElementById('sendOtpBtn').addEventListener('click', async () => {
+    const email = forgotEmailInput.value.trim();
+    if (!email) {
+      showToast('Please enter your email.');
+      return;
+    }
+
+    const btn = document.getElementById('sendOtpBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const { res, data } = await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        showToast(data.message || 'Failed to send code.');
+        btn.disabled = false;
+        btn.textContent = 'Send Code';
+        return;
+      }
+
+      forgotEmail = email;
+      emailDisplay.textContent = email;
+      showStep(step2);
+      startResendTimer();
+      // Focus first OTP box
+      document.querySelector('.otp-box[data-index="0"]').focus();
+      showToast('Verification code sent!', 'success');
+    } catch (err) {
+      showToast('Cannot connect to server.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send Code';
+  });
+
+  // ── OTP Input behavior ──
+  const otpBoxes = document.querySelectorAll('.otp-box');
+
+  otpBoxes.forEach((box) => {
+    box.addEventListener('input', (e) => {
+      const val = e.target.value;
+      // Only allow digits
+      e.target.value = val.replace(/\D/g, '').slice(0, 1);
+
+      if (e.target.value && box.dataset.index < 5) {
+        const next = document.querySelector(`.otp-box[data-index="${parseInt(box.dataset.index) + 1}"]`);
+        if (next) next.focus();
+      }
+    });
+
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !box.value && box.dataset.index > 0) {
+        const prev = document.querySelector(`.otp-box[data-index="${parseInt(box.dataset.index) - 1}"]`);
+        if (prev) { prev.focus(); prev.value = ''; }
+      }
+    });
+
+    // Handle paste
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      pasted.split('').forEach((char, i) => {
+        const target = document.querySelector(`.otp-box[data-index="${i}"]`);
+        if (target) target.value = char;
+      });
+      const lastBox = document.querySelector(`.otp-box[data-index="${Math.min(pasted.length - 1, 5)}"]`);
+      if (lastBox) lastBox.focus();
+    });
+  });
+
+  // ── Step 2: Verify OTP ──
+  document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+    const code = Array.from(otpBoxes).map((b) => b.value).join('');
+    if (code.length !== 6) {
+      showToast('Please enter the complete 6-digit code.');
+      return;
+    }
+
+    const btn = document.getElementById('verifyOtpBtn');
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+
+    try {
+      const { res, data } = await apiFetch('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email: forgotEmail, code }),
+      });
+
+      if (!res.ok) {
+        showToast(data.message || 'Invalid code.');
+        btn.disabled = false;
+        btn.textContent = 'Verify Code';
+        return;
+      }
+
+      clearResendTimer();
+      showStep(step3);
+      document.getElementById('forgotNewPassword').focus();
+    } catch (err) {
+      showToast('Cannot connect to server.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Verify Code';
+  });
+
+  // ── Resend timer (60s cooldown) ──
+  function startResendTimer() {
+    let seconds = 60;
+    const timerEl = document.getElementById('resendTimer');
+    const resendBtn = document.getElementById('resendOtpBtn');
+    resendBtn.disabled = true;
+
+    timerEl.textContent = `Resend in ${seconds}s`;
+
+    resendInterval = setInterval(() => {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(resendInterval);
+        resendInterval = null;
+        timerEl.textContent = '';
+        resendBtn.disabled = false;
+      } else {
+        timerEl.textContent = `Resend in ${seconds}s`;
+      }
+    }, 1000);
+  }
+
+  function clearResendTimer() {
+    if (resendInterval) {
+      clearInterval(resendInterval);
+      resendInterval = null;
+    }
+    const timerEl = document.getElementById('resendTimer');
+    if (timerEl) timerEl.textContent = '';
+  }
+
+  document.getElementById('resendOtpBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('resendOtpBtn');
+    btn.disabled = true;
+
+    try {
+      const { res, data } = await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      if (res.ok) {
+        showToast('New code sent!', 'success');
+        otpBoxes.forEach((b) => (b.value = ''));
+        document.querySelector('.otp-box[data-index="0"]').focus();
+        startResendTimer();
+      } else {
+        showToast(data.message || 'Failed to resend.');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      showToast('Cannot connect to server.');
+      btn.disabled = false;
+    }
+  });
+
+  // ── Step 3: Reset Password ──
+  document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
+    const newPw = document.getElementById('forgotNewPassword').value;
+    const confirmPw = document.getElementById('forgotConfirmPassword').value;
+
+    if (newPw.length < 6) {
+      showToast('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPw !== confirmPw) {
+      showToast('Passwords do not match.');
+      return;
+    }
+
+    const btn = document.getElementById('resetPasswordBtn');
+    btn.disabled = true;
+    btn.textContent = 'Resetting...';
+
+    try {
+      const { res, data } = await apiFetch('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: forgotEmail, new_password: newPw }),
+      });
+
+      if (!res.ok) {
+        showToast(data.message || 'Failed to reset password.');
+        btn.disabled = false;
+        btn.textContent = 'Reset Password';
+        return;
+      }
+
+      closeForgotModal();
+      showToast('Password reset successfully! You can now log in.', 'success');
+    } catch (err) {
+      showToast('Cannot connect to server.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Reset Password';
+  });
+}
