@@ -128,16 +128,121 @@ router.post('/login', async (req, res) => {
         id_number: user.id_number,
         first_name: user.first_name,
         last_name: user.last_name,
+        middle_name: user.middle_name,
         course: user.course,
         course_level: user.course_level,
+        email: user.email,
+        address: user.address,
         remaining_sessions: user.remaining_sessions,
         role: user.role,
+        profile_image: user.profile_image,
       },
     });
   } catch (err) {
     console.error('Login error:', err);
     return res.status(500).json({ message: 'Server error. Please try again.' });
   }
+});
+
+// ── MIDDLEWARE & UPLOAD ───────────────────────────────────────
+const verifyToken = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, '../uploads'),
+  filename: (req, _file, cb) => {
+    const ext = path.extname(_file.originalname).toLowerCase();
+    cb(null, `avatar-${req.user.id}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) return cb(null, true);
+    cb(new Error('Only .jpg, .png, .webp images are allowed.'));
+  },
+});
+
+// ── GET PROFILE ──────────────────────────────────────────────
+// GET /api/auth/profile
+router.get('/profile', verifyToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id_number, first_name, last_name, middle_name,
+              course, course_level, email, address, remaining_sessions, role, profile_image
+       FROM users WHERE id_number = ?`,
+      [req.user.id],
+    );
+    if (rows.length === 0)
+      return res.status(404).json({ message: 'User not found.' });
+
+    return res.status(200).json({ user: rows[0] });
+  } catch (err) {
+    console.error('Get profile error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── UPDATE PROFILE ───────────────────────────────────────────
+// PUT /api/auth/profile
+router.put('/profile', verifyToken, async (req, res) => {
+  const { first_name, last_name, middle_name, course, course_level, email, address } = req.body;
+
+  if (!first_name || !last_name)
+    return res.status(400).json({ message: 'First and last name are required.' });
+
+  try {
+    await pool.query(
+      `UPDATE users SET first_name = ?, last_name = ?, middle_name = ?,
+              course = ?, course_level = ?, email = ?, address = ?
+       WHERE id_number = ?`,
+      [first_name, last_name, middle_name, course, course_level, email, address, req.user.id],
+    );
+
+    const [rows] = await pool.query(
+      `SELECT id_number, first_name, last_name, middle_name,
+              course, course_level, email, address, remaining_sessions, role, profile_image
+       FROM users WHERE id_number = ?`,
+      [req.user.id],
+    );
+
+    return res.status(200).json({ message: 'Profile updated.', user: rows[0] });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── UPLOAD PROFILE IMAGE ─────────────────────────────────────
+// POST /api/auth/profile/avatar
+router.post('/profile/avatar', verifyToken, (req, res) => {
+  upload.single('avatar')(req, res, async (err) => {
+    if (err) {
+      const msg = err instanceof multer.MulterError
+        ? 'File too large. Max 2 MB.'
+        : err.message;
+      return res.status(400).json({ message: msg });
+    }
+    if (!req.file)
+      return res.status(400).json({ message: 'No file uploaded.' });
+
+    const imagePath = `/uploads/${req.file.filename}`;
+    try {
+      await pool.query('UPDATE users SET profile_image = ? WHERE id_number = ?', [
+        imagePath,
+        req.user.id,
+      ]);
+      return res.status(200).json({ message: 'Avatar updated.', profile_image: imagePath });
+    } catch (e) {
+      console.error('Avatar upload error:', e);
+      return res.status(500).json({ message: 'Server error.' });
+    }
+  });
 });
 
 module.exports = router;

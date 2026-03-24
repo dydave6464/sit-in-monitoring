@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
   address            VARCHAR(255),
   role               ENUM('student', 'admin') DEFAULT 'student',
   remaining_sessions INT DEFAULT 30,
+  profile_image      VARCHAR(255) DEFAULT NULL,
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
