@@ -464,10 +464,34 @@
   overflow-y: auto;
 }
 
+.modal-body label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
 .modal-actions {
   display: flex;
   gap: 12px;
   margin-top: 20px;
+}
+
+.btn-primary {
+  padding: 12px;
+  background: var(--blue-main);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: var(--blue-hover);
 }
 
 .modal-actions .btn-primary {
@@ -576,10 +600,38 @@ input:disabled {
   font-size: 28px;
   color: #e2e8f0;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color 0.15s, transform 0.15s;
+}
+.star-select span:hover {
+  transform: scale(1.15);
 }
 .star-select span.active {
   color: #d69e2e;
+}
+
+/* ── FEEDBACK MODAL OVERRIDES ───────────────────────────────── */
+.modal-body textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-dark);
+  background: var(--bg);
+  outline: none;
+  resize: vertical;
+  min-height: 90px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modal-body textarea:focus {
+  border-color: var(--blue-main);
+  box-shadow: 0 0 0 3px rgba(45, 123, 229, 0.12);
+  background: var(--white);
+}
+.modal-body textarea::placeholder {
+  color: var(--text-light);
 }
 
 .table-wrapper {
