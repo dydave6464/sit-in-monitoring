@@ -1,0 +1,13 @@
+{
+	"name": "Node.js",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:4-24-trixie",
+	"features": {
+		"ghcr.io/rails/devcontainer/features/mysql-client:1": {},
+		"ghcr.io/devcontainers-extra/features/mysql-server:1": {
+			"version": "8.0"
+		}
+	},
+	"postCreateCommand": "cd server && npm install",
+	"postStartCommand": "mysqld_safe &",
+	"forwardPorts": [3000]
+}
