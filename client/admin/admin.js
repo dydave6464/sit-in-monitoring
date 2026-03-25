@@ -2,6 +2,13 @@
 const user = requireAdmin();
 if (!user) throw new Error('Not authenticated');
 
+// ── TITLE CASE HELPER ────────────────────────────────────────
+function titleCase(str) {
+  if (!str) return '';
+  return str.toLowerCase().split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 // Set admin name in sidebar
 document.getElementById('sidebarAdminName').textContent =
   user.first_name + ' ' + user.last_name;
@@ -351,12 +358,12 @@ function renderStudents(list) {
       (s) => `
     <tr>
       <td>${s.id_number}</td>
-      <td>${s.last_name}, ${s.first_name}</td>
+      <td>${titleCase(s.last_name)}, ${titleCase(s.first_name)}</td>
       <td>${s.course_level || '--'}</td>
       <td>${s.course || '--'}</td>
       <td>${s.remaining_sessions}</td>
       <td>
-        <button class="btn-edit" onclick="openEditModal('${s.id_number}', '${s.last_name}, ${s.first_name}', ${s.remaining_sessions})">Edit</button>
+        <button class="btn-edit" onclick="openEditModal('${s.id_number}', '${titleCase(s.last_name)}, ${titleCase(s.first_name)}', ${s.remaining_sessions})">Edit</button>
         <button class="btn-delete" onclick="deleteStudent('${s.id_number}')">Delete</button>
       </td>
     </tr>
@@ -1020,6 +1027,7 @@ async function lookupStudent() {
     document.getElementById('sitinIdNumber').textContent = s.id_number;
     const fullName = [s.first_name, s.middle_name, s.last_name]
       .filter(Boolean)
+      .map(titleCase)
       .join(' ');
     document.getElementById('sitinStudentName').textContent = fullName;
     document.getElementById('sitinCourseYear').textContent =
