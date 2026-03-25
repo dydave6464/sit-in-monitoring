@@ -62,7 +62,7 @@ function showSection(sectionId) {
   }
 
   // Load section data
-  if (sectionId === 'students') loadStudents();
+  if (sectionId === 'students') { loadStudents(); loadStudentCount(); }
   if (sectionId === 'current-sitin') loadCurrentSitin();
   if (sectionId === 'reports') { loadReports(); loadReportsLog(); }
   if (sectionId === 'feedback') loadFeedback();
@@ -331,6 +331,15 @@ async function deleteAnnouncement(id) {
 
 // ── STUDENTS ──────────────────────────────────────────────────
 let allStudents = [];
+
+async function loadStudentCount() {
+  try {
+    const { res, data } = await apiFetch('/admin/stats');
+    if (res.ok) {
+      document.getElementById('statStudents').textContent = data.total_students;
+    }
+  } catch (err) { /* ignore */ }
+}
 
 async function loadStudents() {
   try {

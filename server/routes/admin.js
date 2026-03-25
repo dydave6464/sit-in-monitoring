@@ -10,6 +10,16 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
+// Helper: get 10 PM PHT cutoff in UTC for daily reset
+function getDailyCutoffUTC() {
+  const now = new Date();
+  const pht = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const cutoff = new Date(pht);
+  cutoff.setUTCHours(22, 0, 0, 0);
+  if (pht.getUTCHours() < 22) cutoff.setUTCDate(cutoff.getUTCDate() - 1);
+  return new Date(cutoff.getTime() - 8 * 60 * 60 * 1000);
+}
+
 // ── DASHBOARD STATS ───────────────────────────────────────────
 // GET /api/admin/stats
 router.get('/stats', verifyToken, adminOnly, async (req, res) => {
@@ -20,8 +30,11 @@ router.get('/stats', verifyToken, adminOnly, async (req, res) => {
     const [[{ currently_sitin }]] = await pool.query(
       `SELECT COUNT(*) as currently_sitin FROM sit_in_sessions WHERE status = 'active'`,
     );
+    // Total sit-in resets daily at 10 PM PHT
     const [[{ total_sitin }]] = await pool.query(
-      `SELECT COUNT(*) as total_sitin FROM sit_in_sessions WHERE status = 'completed'`,
+      `SELECT COUNT(*) as total_sitin FROM sit_in_sessions
+       WHERE status = 'completed' AND created_at >= ?`,
+      [getDailyCutoffUTC()],
     );
 
     return res
@@ -126,7 +139,7 @@ router.get('/sse', verifyToken, adminOnly, (req, res) => {
         `SELECT
           (SELECT COUNT(*) FROM users WHERE role = 'student') as total_students,
           (SELECT COUNT(*) FROM sit_in_sessions WHERE status = 'active') as currently_sitin,
-          (SELECT COUNT(*) FROM sit_in_sessions WHERE status = 'completed') as total_sitin`,
+          (SELECT COUNT(*) FROM sit_in_sessions WHERE status = 'completed' AND created_at >= '${getDailyCutoffUTC().toISOString().slice(0,19).replace('T',' ')}') as total_sitin`,
       );
       res.write(`data: ${JSON.stringify({ active, stats })}\n\n`);
     } catch (err) {
@@ -357,7 +370,7 @@ router.get('/sse-open', async (req, res) => {
         `SELECT
           (SELECT COUNT(*) FROM users WHERE role = 'student') as total_students,
           (SELECT COUNT(*) FROM sit_in_sessions WHERE status = 'active') as currently_sitin,
-          (SELECT COUNT(*) FROM sit_in_sessions WHERE status = 'completed') as total_sitin`,
+          (SELECT COUNT(*) FROM sit_in_sessions WHERE status = 'completed' AND created_at >= '${getDailyCutoffUTC().toISOString().slice(0,19).replace('T',' ')}') as total_sitin`,
       );
       res.write(`data: ${JSON.stringify({ active, stats })}\n\n`);
     } catch (err) {
