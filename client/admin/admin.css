@@ -543,6 +543,13 @@
   padding: 28px 16px !important;
 }
 
+.empty-section {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
 .status-badge {
   display: inline-block;
   font-size: 11px;

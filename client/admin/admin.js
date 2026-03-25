@@ -21,6 +21,7 @@ const topbarTitle = document.getElementById('topbarTitle');
 const sectionTitles = {
   dashboard: 'Dashboard',
   students: 'Students Information',
+  'current-sitin': 'Current Sit-in',
   'sitin-records': 'Sit-in Records',
   reports: 'Sit-in Reports',
   feedback: 'Feedback Reports',
@@ -62,7 +63,7 @@ function showSection(sectionId) {
 
   // Load section data
   if (sectionId === 'students') loadStudents();
-  if (sectionId === 'sitin-records') loadRecords();
+  if (sectionId === 'current-sitin') loadCurrentSitin();
   if (sectionId === 'reports') { loadReports(); loadReportsLog(); }
   if (sectionId === 'feedback') loadFeedback();
   if (sectionId === 'dashboard') loadAnnouncements();
@@ -478,28 +479,30 @@ async function deleteStudent(id_number) {
 }
 
 // ── RECORDS ───────────────────────────────────────────────────
-let allRecords = [];
+// ── CURRENT SIT-IN ───────────────────────────────────────────
+let allCurrentSitin = [];
 
-async function loadRecords() {
+async function loadCurrentSitin() {
   try {
     const { res, data } = await apiFetch('/admin/records');
     if (!res.ok) {
-      showToast('Failed to load records.', 'error');
+      showToast('Failed to load current sit-in sessions.', 'error');
       return;
     }
-    allRecords = data.records;
-    recordsPage = 1;
-    renderRecordsPaginated();
+    // Filter only active sessions
+    allCurrentSitin = (data.records || []).filter(r => r.status === 'active');
+    currentSitinPage = 1;
+    renderCurrentSitinPaginated();
   } catch (err) {
     showToast('Cannot connect to server.', 'error');
   }
 }
 
-function renderRecords(list) {
-  const tbody = document.getElementById('recordsTableBody');
+function renderCurrentSitin(list) {
+  const tbody = document.getElementById('currentSitinTableBody');
   if (!list || list.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="8" class="empty-row">No records yet.</td></tr>';
+      '<tr><td colspan="8" class="empty-row">No active sit-in sessions.</td></tr>';
     return;
   }
   tbody.innerHTML = list
@@ -508,12 +511,12 @@ function renderRecords(list) {
     <tr>
       <td>${r.id}</td>
       <td>${r.id_number}</td>
-      <td>${r.student_name}</td>
+      <td>${titleCase(r.student_name)}</td>
       <td>${r.purpose}</td>
       <td>${r.lab}</td>
       <td>${r.remaining_sessions !== undefined ? r.remaining_sessions : '--'}</td>
       <td><span class="status-badge status-${r.status}">${r.status}</span></td>
-      <td>${r.status === 'active' ? `<button class="btn-danger-sm" onclick="adminLogoutSession(${r.id})">Logout</button>` : '--'}</td>
+      <td><button class="btn-danger-sm" onclick="adminLogoutSession(${r.id})">Logout</button></td>
     </tr>
   `,
     )
@@ -537,15 +540,15 @@ async function adminLogoutSession(sessionId) {
       return;
     }
     showToast(data.message, 'success');
-    loadRecords();
+    loadCurrentSitin();
   } catch (err) {
     showToast('Cannot connect to server.', 'error');
   }
 }
 
-document.getElementById('recordsSearch').addEventListener('input', function () {
-  recordsPage = 1;
-  renderRecordsPaginated();
+document.getElementById('currentSitinSearch').addEventListener('input', function () {
+  currentSitinPage = 1;
+  renderCurrentSitinPaginated();
 });
 
 // ── REPORTS ───────────────────────────────────────────────────
@@ -775,12 +778,12 @@ function renderStudentsPaginated() {
 
 function goStudentsPage(p) { studentsPage = p; renderStudentsPaginated(); }
 
-// ── PAGINATED RECORDS ────────────────────────────────────────
-let recordsPage = 1;
+// ── PAGINATED CURRENT SIT-IN ─────────────────────────────────
+let currentSitinPage = 1;
 
-function renderRecordsPaginated() {
-  const q = document.getElementById('recordsSearch').value.toLowerCase();
-  const filtered = allRecords.filter(
+function renderCurrentSitinPaginated() {
+  const q = document.getElementById('currentSitinSearch').value.toLowerCase();
+  const filtered = allCurrentSitin.filter(
     (r) =>
       String(r.id).includes(q) ||
       r.id_number.includes(q) ||
@@ -788,11 +791,11 @@ function renderRecordsPaginated() {
       r.purpose.toLowerCase().includes(q) ||
       r.lab.toLowerCase().includes(q),
   );
-  renderRecords(paginate(filtered, recordsPage));
-  renderPagination('recordsPagination', filtered.length, recordsPage, 'goRecordsPage');
+  renderCurrentSitin(paginate(filtered, currentSitinPage));
+  renderPagination('currentSitinPagination', filtered.length, currentSitinPage, 'goCurrentSitinPage');
 }
 
-function goRecordsPage(p) { recordsPage = p; renderRecordsPaginated(); }
+function goCurrentSitinPage(p) { currentSitinPage = p; renderCurrentSitinPaginated(); }
 
 // ── REPORTS LOG ──────────────────────────────────────────────
 let allReportsLog = [];

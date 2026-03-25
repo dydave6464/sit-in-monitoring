@@ -52,6 +52,17 @@
           </span>
           <span>Students</span>
         </a>
+        <a href="#" class="nav-item" data-section="current-sitin">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12z" />
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="12" r="10" stroke-dasharray="4 3" />
+            </svg>
+          </span>
+          <span>Current Sit-in</span>
+        </a>
 
         <!-- Records Dropdown -->
         <div class="nav-dropdown">
@@ -304,14 +315,15 @@
       </section>
 
       <!-- ── SIT-IN RECORDS SECTION ─────────────────────────── -->
-      <section class="content-section" id="section-sitin-records">
+      <!-- ── CURRENT SIT-IN SECTION ──────────────────────────── -->
+      <section class="content-section" id="section-current-sitin">
         <div class="panel">
           <div class="panel-header">
-            <h3>Sit-in Records</h3>
-            <input type="text" id="recordsSearch" placeholder="Search records..." class="search-input" />
+            <h3>Current Sit-in</h3>
+            <input type="text" id="currentSitinSearch" placeholder="Search active sessions..." class="search-input" />
           </div>
           <div class="table-wrapper">
-            <table class="data-table" id="recordsTable">
+            <table class="data-table" id="currentSitinTable">
               <thead>
                 <tr>
                   <th>Sit-in ID</th>
@@ -324,14 +336,26 @@
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody id="recordsTableBody">
+              <tbody id="currentSitinTableBody">
                 <tr>
-                  <td colspan="8" class="empty-row">Loading records...</td>
+                  <td colspan="8" class="empty-row">No active sit-in sessions.</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div class="pagination" id="recordsPagination"></div>
+          <div class="pagination" id="currentSitinPagination"></div>
+        </div>
+      </section>
+
+      <!-- ── SIT-IN RECORDS SECTION ───────────────────────────── -->
+      <section class="content-section" id="section-sitin-records">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Sit-in Records</h3>
+          </div>
+          <div class="empty-section">
+            <p>Coming soon.</p>
+          </div>
         </div>
       </section>
 
