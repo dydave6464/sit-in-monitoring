@@ -4,7 +4,6 @@
  *
  * Usage: npm run db:reset
  *
- * Works with both XAMPP MySQL and standalone MySQL — uses .env credentials.
  */
 
 const mysql = require('mysql2/promise');
@@ -21,6 +20,7 @@ async function resetDatabase() {
     // Connect without specifying database (it may not exist yet)
     conn = await mysql.createConnection({
       host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD || '',
       multipleStatements: true,
