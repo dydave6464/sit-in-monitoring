@@ -1,13 +1,10 @@
 {
-	"name": "Node.js",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:4-24-trixie",
+	"name": "Node.js + MySQL",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
 	"features": {
-		"ghcr.io/rails/devcontainer/features/mysql-client:1": {},
-		"ghcr.io/devcontainers-extra/features/mysql-server:1": {
-			"version": "8.0"
-		}
+		"ghcr.io/devcontainers/features/common-utils:2": {}
 	},
-	"postCreateCommand": "cd server && npm install",
-	"postStartCommand": "mysqld_safe &",
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y default-mysql-server default-mysql-client && sudo service mariadb start && cd server && npm install",
+	"postStartCommand": "sudo service mariadb start",
 	"forwardPorts": [3000]
 }
