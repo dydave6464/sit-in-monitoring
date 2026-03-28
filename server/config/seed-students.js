@@ -83,7 +83,32 @@ async function seed() {
         [s.id],
       );
     }
-    console.log(`✓ ${sessionCount} sit-in sessions added`);
+    console.log(`✓ ${sessionCount} completed sit-in sessions added`);
+
+    // Add 15 active sit-in sessions (currently sitting in)
+    console.log('Seeding active sit-in sessions...');
+    const shuffled = [...students].sort(() => Math.random() - 0.5);
+    const activeStudents = shuffled.slice(0, 15);
+    let activeCount = 0;
+    for (const s of activeStudents) {
+      const purpose = purposes[Math.floor(Math.random() * purposes.length)];
+      const lab = labs[Math.floor(Math.random() * labs.length)];
+      const studentName = [s.first, s.middle, s.last].filter(Boolean).join(' ');
+      const minutesAgo = 10 + Math.floor(Math.random() * 120);
+
+      await conn.query(
+        `INSERT INTO sit_in_sessions (id_number, student_name, purpose, lab, status, created_at, last_heartbeat)
+         VALUES (?, ?, ?, ?, 'active', DATE_SUB(NOW(), INTERVAL ? MINUTE), NOW())`,
+        [s.id, studentName, purpose, lab, minutesAgo],
+      );
+      activeCount++;
+
+      await conn.query(
+        'UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = ? AND remaining_sessions > 0',
+        [s.id],
+      );
+    }
+    console.log(`✓ ${activeCount} active sit-in sessions added`);
 
     console.log('\nSeed complete!');
   } catch (err) {
