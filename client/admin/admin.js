@@ -253,7 +253,7 @@ function updateLiveTable(active) {
   tbody.innerHTML = active
     .map(
       (s) => `
-    <tr class="clickable" onclick="showSection('current-sitin')">
+    <tr>
       <td>${s.id_number}</td>
       <td>${s.student_name}</td>
       <td>${s.purpose}</td>
