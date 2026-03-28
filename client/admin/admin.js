@@ -89,8 +89,28 @@ document.getElementById('recordsDropBtn').addEventListener('click', () => {
 });
 
 // Sidebar toggle (mobile)
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openSidebar() {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.add('active');
+}
+
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('active');
+}
+
 document.getElementById('sidebarToggle').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
+  sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+// Close sidebar on nav click (mobile)
+document.querySelectorAll('.nav-item, .nav-sub-item').forEach((item) => {
+  item.addEventListener('click', closeSidebar);
 });
 
 // ── PROFILE DROPDOWN ─────────────────────────────────────────
