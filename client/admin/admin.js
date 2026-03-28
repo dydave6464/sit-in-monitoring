@@ -243,14 +243,25 @@ function updateStats(stats) {
   document.getElementById('statTotal').textContent = stats.total_sitin;
 }
 
+let liveData = [];
+let livePage = 1;
+
 function updateLiveTable(active) {
+  liveData = active || [];
+  livePage = 1;
+  renderLivePage();
+}
+
+function renderLivePage() {
   const tbody = document.getElementById('liveTableBody');
-  if (!active || active.length === 0) {
+  if (!liveData || liveData.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="5" class="empty-row">No active sit-in sessions</td></tr>';
+    document.getElementById('livePagination').innerHTML = '';
     return;
   }
-  tbody.innerHTML = active
+  const page = paginate(liveData, livePage);
+  tbody.innerHTML = page
     .map(
       (s) => `
     <tr class="clickable" onclick="showSection('current-sitin')">
@@ -263,7 +274,13 @@ function updateLiveTable(active) {
   `,
     )
     .join('');
+  renderPagination('livePagination', liveData.length, livePage, 'goLivePage');
 }
+
+window.goLivePage = function (p) {
+  livePage = p;
+  renderLivePage();
+};
 
 // ── ANNOUNCEMENTS ─────────────────────────────────────────────
 async function loadAnnouncements() {
