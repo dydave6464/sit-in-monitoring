@@ -25,6 +25,7 @@ const sectionTitles = {
   'sitin-records': 'Sit-in Records',
   reports: 'Sit-in Reports',
   feedback: 'Feedback Reports',
+  analytics: 'Analytics',
   reservation: 'Reservations',
 };
 
@@ -65,7 +66,8 @@ function showSection(sectionId) {
   if (sectionId === 'students') { loadStudents(); loadStudentCount(); }
   if (sectionId === 'current-sitin') loadCurrentSitin();
   if (sectionId === 'sitin-records') loadSitinRecords();
-  if (sectionId === 'reports') { loadReports(); loadReportsLog(); }
+  if (sectionId === 'reports') loadReportsLog();
+  if (sectionId === 'analytics') loadReports();
   if (sectionId === 'feedback') loadFeedback();
   if (sectionId === 'dashboard') loadAnnouncements();
   if (sectionId === 'reservation') loadReservationRequests();
@@ -1035,8 +1037,31 @@ document.getElementById('feedbackSearch')?.addEventListener('input', function ()
 });
 
 // ── EXPORT UTILITIES ─────────────────────────────────────────
-function exportToCSV(headers, rows, filename) {
-  const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+const INSTITUTION = 'University of Cebu Main Campus';
+
+function getReportMeta(reportName) {
+  const generated = new Date().toLocaleString('en-US', {
+    year: 'numeric', month: 'long', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+  return {
+    line1: INSTITUTION,
+    line2: `${reportName} Report`,
+    line3: `Generated: ${generated}`,
+  };
+}
+
+function exportToCSV(headers, rows, filename, reportName) {
+  const meta = getReportMeta(reportName);
+  const escape = (s) => `"${String(s).replace(/"/g, '""')}"`;
+  const metaLines = [
+    [escape(meta.line1)].join(','),
+    [escape(meta.line2)].join(','),
+    [escape(meta.line3)].join(','),
+    '',
+  ];
+  const data = [headers.join(','), ...rows.map(r => r.map(escape).join(','))];
+  const csv = [...metaLines, ...data].join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1044,14 +1069,30 @@ function exportToCSV(headers, rows, filename) {
   a.click();
 }
 
-function exportToExcel(headers, rows, filename) {
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+function exportToExcel(headers, rows, filename, reportName) {
+  const meta = getReportMeta(reportName);
+  const sheetData = [
+    [meta.line1],
+    [meta.line2],
+    [meta.line3],
+    [],
+    headers,
+    ...rows,
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+  // Merge the 3 header rows across the column span
+  const colCount = Math.max(headers.length, 1);
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } },
+  ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
   XLSX.writeFile(wb, filename);
 }
 
-function exportToPDF(headers, rows, filename, title) {
+function exportToPDF(headers, rows, filename, reportName) {
   const jsPDFLib = window.jspdf || window.jsPDF;
   if (!jsPDFLib) {
     showToast('PDF library failed to load. Try refreshing the page.', 'error');
@@ -1059,9 +1100,29 @@ function exportToPDF(headers, rows, filename, title) {
   }
   const jsPDFClass = jsPDFLib.jsPDF || jsPDFLib;
   const doc = new jsPDFClass();
-  doc.setFontSize(16);
-  doc.text(title, 14, 20);
-  doc.autoTable({ head: [headers], body: rows, startY: 30, styles: { fontSize: 9 } });
+  const meta = getReportMeta(reportName);
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  doc.text(meta.line1, pageWidth / 2, 16, { align: 'center' });
+
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'normal');
+  doc.text(meta.line2, pageWidth / 2, 24, { align: 'center' });
+
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text(meta.line3, pageWidth / 2, 30, { align: 'center' });
+  doc.setTextColor(0);
+
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: 36,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [31, 79, 148] },
+  });
   doc.save(filename);
 }
 
@@ -1073,9 +1134,10 @@ function exportReports(format) {
     formatDuration(r.duration_minutes), formatShortDate(r.session_date),
   ]);
   const ts = new Date().toISOString().slice(0, 10);
-  if (format === 'csv') exportToCSV(headers, rows, `sit-in-reports-${ts}.csv`);
-  if (format === 'excel') exportToExcel(headers, rows, `sit-in-reports-${ts}.xlsx`);
-  if (format === 'pdf') exportToPDF(headers, rows, `sit-in-reports-${ts}.pdf`, 'CCS Sit-in Reports');
+  const reportName = 'Sit-in';
+  if (format === 'csv') exportToCSV(headers, rows, `sit-in-reports-${ts}.csv`, reportName);
+  if (format === 'excel') exportToExcel(headers, rows, `sit-in-reports-${ts}.xlsx`, reportName);
+  if (format === 'pdf') exportToPDF(headers, rows, `sit-in-reports-${ts}.pdf`, reportName);
 }
 
 function exportFeedback(format) {
@@ -1085,9 +1147,10 @@ function exportFeedback(format) {
     f.rating + '/5', f.message || '--', formatShortDate(f.created_at),
   ]);
   const ts = new Date().toISOString().slice(0, 10);
-  if (format === 'csv') exportToCSV(headers, rows, `feedback-reports-${ts}.csv`);
-  if (format === 'excel') exportToExcel(headers, rows, `feedback-reports-${ts}.xlsx`);
-  if (format === 'pdf') exportToPDF(headers, rows, `feedback-reports-${ts}.pdf`, 'CCS Feedback Reports');
+  const reportName = 'Feedback';
+  if (format === 'csv') exportToCSV(headers, rows, `feedback-reports-${ts}.csv`, reportName);
+  if (format === 'excel') exportToExcel(headers, rows, `feedback-reports-${ts}.xlsx`, reportName);
+  if (format === 'pdf') exportToPDF(headers, rows, `feedback-reports-${ts}.pdf`, reportName);
 }
 
 // ── SIT-IN SEARCH & MODAL ────────────────────────────────────
