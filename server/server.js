@@ -17,6 +17,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/sitin', require('./routes/sitin'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/announcements', require('./routes/announcement'));
+app.use('/api/reservations', require('./routes/reservations'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // ── HEALTH CHECK ──────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

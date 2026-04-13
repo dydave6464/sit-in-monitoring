@@ -51,7 +51,7 @@ async function resetDatabase() {
     console.log('\n✓ Database reset complete!');
     console.log(`  Database: ${DB_NAME}`);
     console.log('  Admin: 00000000 / admin123');
-    console.log('  Tables: users, sit_in_sessions, announcements, feedback');
+    console.log('  Tables: users, sit_in_sessions, announcements, feedback, reservations, notifications');
 
     // Clean up uploaded avatars
     const uploadsDir = path.join(__dirname, '../uploads');

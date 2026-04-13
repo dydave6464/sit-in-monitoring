@@ -58,6 +58,33 @@ CREATE TABLE IF NOT EXISTS feedback (
   FOREIGN KEY (id_number) REFERENCES users(id_number)
 );
 
+-- ── RESERVATIONS ────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS reservations (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  id_number      CHAR(8) NOT NULL,
+  student_name   VARCHAR(255) NOT NULL,
+  lab            VARCHAR(100) NOT NULL,
+  pc_number      INT NOT NULL,
+  reserved_date  DATE NOT NULL,
+  status         ENUM('pending', 'approved', 'rejected', 'cancelled') DEFAULT 'pending',
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  decided_at     DATETIME DEFAULT NULL,
+  FOREIGN KEY (id_number) REFERENCES users(id_number),
+  UNIQUE KEY uniq_pc_per_day (lab, pc_number, reserved_date, status)
+);
+
+-- ── NOTIFICATIONS ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  id_number      CHAR(8) NOT NULL,
+  type           VARCHAR(50) NOT NULL,
+  title          VARCHAR(255) NOT NULL,
+  message        TEXT NOT NULL,
+  is_read        BOOLEAN DEFAULT FALSE,
+  created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_number) REFERENCES users(id_number)
+);
+
 -- ── DEFAULT ADMIN ACCOUNT ────────────────────────────────────
 -- Password: admin123 — change after first login
 INSERT INTO users (id_number, last_name, first_name, middle_name, password, role, remaining_sessions)
