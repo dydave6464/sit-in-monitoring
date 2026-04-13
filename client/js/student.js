@@ -224,22 +224,33 @@ document.getElementById('navLogoutBtn').addEventListener('click', async () => {
 const dashContainer = document.querySelector('.dash-container');
 const welcomeBanner = document.querySelector('.welcome-banner');
 const historySection = document.getElementById('historySection');
+const reservationSection = document.getElementById('reservationSection');
 const navTabs = document.querySelectorAll('.dash-nav-item[data-tab]');
+
+function hideAllSections() {
+  dashContainer.classList.add('hidden');
+  welcomeBanner.classList.add('hidden');
+  historySection.classList.add('hidden');
+  reservationSection.classList.add('hidden');
+}
 
 navTabs.forEach(tab => {
   tab.addEventListener('click', () => {
     navTabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
 
-    if (tab.dataset.tab === 'history') {
-      dashContainer.classList.add('hidden');
-      welcomeBanner.classList.add('hidden');
+    const target = tab.dataset.tab;
+    if (target === 'history') {
+      hideAllSections();
       historySection.classList.remove('hidden');
       loadHistory();
+    } else if (target === 'reservation') {
+      hideAllSections();
+      reservationSection.classList.remove('hidden');
     } else {
+      hideAllSections();
       dashContainer.classList.remove('hidden');
       welcomeBanner.classList.remove('hidden');
-      historySection.classList.add('hidden');
     }
   });
 });
@@ -397,6 +408,211 @@ function syncPanelHeight() {
 window.addEventListener('load', () => setTimeout(syncPanelHeight, 100));
 window.addEventListener('resize', syncPanelHeight);
 
+// ── RESERVATION ──────────────────────────────────────────────
+const resLab = document.getElementById('resLab');
+const resDate = document.getElementById('resDate');
+const loadAvailabilityBtn = document.getElementById('loadAvailabilityBtn');
+const pcGrid = document.getElementById('pcGrid');
+const reserveConfirmModal = document.getElementById('reserveConfirmModal');
+const confirmPcText = document.getElementById('confirmPcText');
+const confirmDateText = document.getElementById('confirmDateText');
+const closeReserveConfirm = document.getElementById('closeReserveConfirm');
+const cancelReserveConfirm = document.getElementById('cancelReserveConfirm');
+const submitReserveBtn = document.getElementById('submitReserveBtn');
+
+let pendingReservation = null;
+
+// Set min date to today
+if (resDate) {
+  const today = new Date().toISOString().split('T')[0];
+  resDate.min = today;
+  resDate.value = today;
+}
+
+async function loadAvailability() {
+  const lab = resLab.value;
+  const date = resDate.value;
+
+  if (!lab) {
+    showToast('Please select a lab.');
+    return;
+  }
+  if (!date) {
+    showToast('Please select a date.');
+    return;
+  }
+
+  pcGrid.innerHTML = '<div class="pc-grid-empty">Loading...</div>';
+
+  try {
+    const { res, data } = await apiFetch(
+      `/reservations/availability?lab=${encodeURIComponent(lab)}&date=${date}`
+    );
+
+    if (!res.ok) {
+      showToast(data.message || 'Failed to load availability.');
+      return;
+    }
+
+    pcGrid.innerHTML = data.pcs.map(pc => {
+      const statusClass = pc.status === 'approved' ? 'reserved'
+        : pc.status === 'pending' ? 'pending'
+        : 'available';
+      const clickable = pc.status === 'available';
+      return `<div class="pc-cell ${statusClass}" ${clickable ? `data-pc="${pc.pc_number}"` : ''}>
+        ${pc.pc_number}
+      </div>`;
+    }).join('');
+
+    // Attach click handlers to available PCs
+    pcGrid.querySelectorAll('.pc-cell.available').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const pcNum = cell.dataset.pc;
+        pendingReservation = { lab, date, pc_number: parseInt(pcNum, 10) };
+        confirmPcText.textContent = `${lab} — PC #${pcNum}`;
+        confirmDateText.textContent = new Date(date).toLocaleDateString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        reserveConfirmModal.classList.remove('hidden');
+      });
+    });
+  } catch (err) {
+    showToast('Cannot connect to server.');
+  }
+}
+
+if (loadAvailabilityBtn) {
+  loadAvailabilityBtn.addEventListener('click', loadAvailability);
+}
+
+function closeConfirm() {
+  reserveConfirmModal.classList.add('hidden');
+  pendingReservation = null;
+}
+
+if (closeReserveConfirm) closeReserveConfirm.addEventListener('click', closeConfirm);
+if (cancelReserveConfirm) cancelReserveConfirm.addEventListener('click', closeConfirm);
+
+if (submitReserveBtn) {
+  submitReserveBtn.addEventListener('click', async () => {
+    if (!pendingReservation) return;
+
+    try {
+      const { res, data } = await apiFetch('/reservations', {
+        method: 'POST',
+        body: JSON.stringify({
+          lab: pendingReservation.lab,
+          pc_number: pendingReservation.pc_number,
+          reserved_date: pendingReservation.date,
+        }),
+      });
+
+      if (!res.ok) {
+        showToast(data.message || 'Failed to submit reservation.');
+        return;
+      }
+
+      closeConfirm();
+      showToast('Reservation submitted! Awaiting approval.', 'success');
+      loadAvailability();
+    } catch (err) {
+      showToast('Cannot connect to server.');
+    }
+  });
+}
+
+// ── NOTIFICATIONS ────────────────────────────────────────────
+const notifBellBtn = document.getElementById('notifBellBtn');
+const notifDropdown = document.getElementById('notifDropdown');
+const notifDot = document.getElementById('notifDot');
+const notifList = document.getElementById('notifList');
+const notifMarkAllBtn = document.getElementById('notifMarkAllBtn');
+
+async function loadNotifications() {
+  try {
+    const { res, data } = await apiFetch('/notifications');
+    if (!res.ok) return;
+
+    const notifs = data.notifications || [];
+    const unreadCount = notifs.filter(n => !n.is_read).length;
+
+    // Toggle red dot
+    if (unreadCount > 0) {
+      notifDot.classList.remove('hidden');
+    } else {
+      notifDot.classList.add('hidden');
+    }
+
+    if (notifs.length === 0) {
+      notifList.innerHTML = '<div class="notif-empty">No notifications</div>';
+      return;
+    }
+
+    notifList.innerHTML = notifs.map(n => {
+      const time = new Date(n.created_at).toLocaleString('en-US', {
+        month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+      });
+      return `
+        <div class="notif-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+          <div class="notif-item-title">${escapeHtml(n.title)}</div>
+          <div class="notif-item-message">${escapeHtml(n.message)}</div>
+          <div class="notif-item-time">${time}</div>
+        </div>`;
+    }).join('');
+
+    // Attach click to mark as read
+    notifList.querySelectorAll('.notif-item').forEach(item => {
+      item.addEventListener('click', async () => {
+        if (!item.classList.contains('unread')) return;
+        const id = item.dataset.id;
+        try {
+          await apiFetch(`/notifications/${id}/read`, { method: 'POST' });
+          item.classList.remove('unread');
+          // Recompute unread count
+          const stillUnread = notifList.querySelectorAll('.notif-item.unread').length;
+          if (stillUnread === 0) notifDot.classList.add('hidden');
+        } catch (err) {
+          // silent
+        }
+      });
+    });
+  } catch (err) {
+    // silent
+  }
+}
+
+if (notifBellBtn) {
+  notifBellBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notifDropdown.classList.toggle('hidden');
+  });
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
+    if (!e.target.closest('.notif-wrapper')) {
+      notifDropdown.classList.add('hidden');
+    }
+  }
+});
+
+if (notifMarkAllBtn) {
+  notifMarkAllBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    try {
+      await apiFetch('/notifications/read-all', { method: 'POST' });
+      loadNotifications();
+    } catch (err) {
+      // silent
+    }
+  });
+}
+
+// Poll notifications every 30 seconds
+setInterval(loadNotifications, 30000);
+
 // ── INIT ─────────────────────────────────────────────────────
 loadProfile();
 loadAnnouncements();
+loadNotifications();
