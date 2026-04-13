@@ -23,9 +23,8 @@ router.get('/availability', verifyToken, async (req, res) => {
     );
 
     const [blocks] = await pool.query(
-      `SELECT pc_number FROM admin_pc_blocks
-       WHERE lab = ? AND blocked_date = ?`,
-      [lab, date],
+      `SELECT pc_number FROM admin_pc_blocks WHERE lab = ?`,
+      [lab],
     );
 
     const blockedSet = new Set(blocks.map((b) => b.pc_number));
@@ -33,13 +32,20 @@ router.get('/availability', verifyToken, async (req, res) => {
     const pcs = [];
     for (let i = 1; i <= TOTAL_PCS; i++) {
       let status;
+      let source = null;
       if (blockedSet.has(i)) {
-        status = 'blocked';
+        status = 'occupied';
+        source = 'admin';
       } else {
         const found = rows.find((r) => r.pc_number === i);
-        status = found ? found.status : 'available';
+        if (found) {
+          status = found.status === 'approved' ? 'occupied' : found.status;
+          source = 'reservation';
+        } else {
+          status = 'available';
+        }
       }
-      pcs.push({ pc_number: i, status });
+      pcs.push({ pc_number: i, status, source });
     }
 
     return res.status(200).json({ pcs });
@@ -79,15 +85,14 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(409).json({ message: 'This PC is already reserved for that date.' });
     }
 
-    // Check if admin has blocked this PC for that date
+    // Check if admin has permanently blocked this PC
     const [blocked] = await pool.query(
-      `SELECT id FROM admin_pc_blocks
-       WHERE lab = ? AND pc_number = ? AND blocked_date = ?`,
-      [lab, pc_number, reserved_date],
+      `SELECT id FROM admin_pc_blocks WHERE lab = ? AND pc_number = ?`,
+      [lab, pc_number],
     );
 
     if (blocked.length > 0) {
-      return res.status(409).json({ message: 'This PC is unavailable for that date.' });
+      return res.status(409).json({ message: 'This PC is unavailable.' });
     }
 
     // Get student name
@@ -220,33 +225,32 @@ router.post('/admin/:id/decide', verifyToken, async (req, res) => {
 });
 
 // ── ADMIN: TOGGLE PC BLOCK ───────────────────────────────────
-// POST /api/reservations/admin/block  body: { lab, pc_number, date, blocked: true|false }
+// POST /api/reservations/admin/block  body: { lab, pc_number, blocked: true|false }
 router.post('/admin/block', verifyToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin only.' });
   }
 
-  const { lab, pc_number, date, blocked } = req.body;
+  const { lab, pc_number, blocked } = req.body;
 
-  if (!lab || !pc_number || !date) {
-    return res.status(400).json({ message: 'Lab, PC number, and date are required.' });
+  if (!lab || !pc_number) {
+    return res.status(400).json({ message: 'Lab and PC number are required.' });
   }
 
   try {
     if (blocked) {
       await pool.query(
-        `INSERT IGNORE INTO admin_pc_blocks (lab, pc_number, blocked_date)
-         VALUES (?, ?, ?)`,
-        [lab, pc_number, date],
+        `INSERT IGNORE INTO admin_pc_blocks (lab, pc_number) VALUES (?, ?)`,
+        [lab, pc_number],
       );
     } else {
       await pool.query(
-        `DELETE FROM admin_pc_blocks WHERE lab = ? AND pc_number = ? AND blocked_date = ?`,
-        [lab, pc_number, date],
+        `DELETE FROM admin_pc_blocks WHERE lab = ? AND pc_number = ?`,
+        [lab, pc_number],
       );
     }
 
-    return res.status(200).json({ message: blocked ? 'PC blocked.' : 'PC unblocked.' });
+    return res.status(200).json({ message: blocked ? 'PC marked as occupied.' : 'PC unmarked.' });
   } catch (err) {
     console.error('Toggle PC block error:', err);
     return res.status(500).json({ message: 'Server error.' });

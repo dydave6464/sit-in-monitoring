@@ -86,14 +86,13 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- ── ADMIN PC BLOCKS ─────────────────────────────────────────
--- Tracks PCs the admin has manually marked as unavailable for a given lab/date
+-- Tracks PCs the admin has manually marked as unavailable (permanent across all dates)
 CREATE TABLE IF NOT EXISTS admin_pc_blocks (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   lab           VARCHAR(100) NOT NULL,
   pc_number     INT NOT NULL,
-  blocked_date  DATE NOT NULL,
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uniq_block (lab, pc_number, blocked_date)
+  UNIQUE KEY uniq_block (lab, pc_number)
 );
 
 -- ── DEFAULT ADMIN ACCOUNT ────────────────────────────────────
