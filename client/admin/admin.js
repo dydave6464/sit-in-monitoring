@@ -67,6 +67,7 @@ function showSection(sectionId) {
   if (sectionId === 'reports') { loadReports(); loadReportsLog(); }
   if (sectionId === 'feedback') loadFeedback();
   if (sectionId === 'dashboard') loadAnnouncements();
+  if (sectionId === 'reservation') loadReservationRequests();
 }
 
 navItems.forEach((item) => {
@@ -1127,6 +1128,172 @@ document.getElementById('submitSitinBtn').addEventListener('click', async () => 
     showToast('Cannot connect to server.', 'error');
   }
 });
+
+// ── RESERVATION MANAGEMENT ────────────────────────────────────
+const reservationRequestsEl = document.getElementById('reservationRequests');
+const resStatusFilter = document.getElementById('resStatusFilter');
+
+async function loadReservationRequests() {
+  if (!reservationRequestsEl) return;
+  const status = resStatusFilter ? resStatusFilter.value : 'pending';
+  const url = status ? `/reservations/admin/all?status=${status}` : `/reservations/admin/all`;
+
+  try {
+    const { res, data } = await apiFetch(url);
+    if (!res.ok) {
+      reservationRequestsEl.innerHTML = '<div class="empty-row">Failed to load reservations.</div>';
+      return;
+    }
+
+    const items = data.reservations || [];
+    if (items.length === 0) {
+      reservationRequestsEl.innerHTML = '<div class="empty-row">No reservations found.</div>';
+      return;
+    }
+
+    reservationRequestsEl.innerHTML = items.map(r => {
+      const date = new Date(r.reserved_date).toLocaleDateString('en-US', {
+        month: 'short', day: '2-digit', year: 'numeric'
+      });
+      const created = new Date(r.created_at).toLocaleString('en-US', {
+        month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+      });
+      const showActions = r.status === 'pending';
+      return `
+        <div class="reservation-request">
+          <div class="req-row">
+            <div>
+              <div class="req-name">${escapeHtml(r.student_name)}</div>
+              <div class="req-id">${r.id_number} · Submitted ${created}</div>
+            </div>
+            <span class="req-status ${r.status}">${r.status}</span>
+          </div>
+          <div class="req-detail"><strong>${escapeHtml(r.lab)}</strong> · PC #${r.pc_number} · ${date}</div>
+          ${showActions ? `
+          <div class="req-actions">
+            <button class="btn-approve" data-id="${r.id}" data-decision="approved">Approve</button>
+            <button class="btn-reject" data-id="${r.id}" data-decision="rejected">Reject</button>
+          </div>` : ''}
+        </div>`;
+    }).join('');
+
+    reservationRequestsEl.querySelectorAll('.btn-approve, .btn-reject').forEach(btn => {
+      btn.addEventListener('click', () => decideReservation(btn.dataset.id, btn.dataset.decision));
+    });
+  } catch (err) {
+    reservationRequestsEl.innerHTML = '<div class="empty-row">Cannot connect to server.</div>';
+  }
+}
+
+async function decideReservation(id, decision) {
+  try {
+    const { res, data } = await apiFetch(`/reservations/admin/${id}/decide`, {
+      method: 'POST',
+      body: JSON.stringify({ decision }),
+    });
+    if (!res.ok) {
+      showToast(data.message || 'Failed to update.', 'error');
+      return;
+    }
+    showToast(`Reservation ${decision}.`, 'success');
+    loadReservationRequests();
+    // Refresh PC grid if currently viewing the same lab/date
+    if (adminPcGrid && adminPcGrid.dataset.loaded === '1') {
+      loadAdminAvailability();
+    }
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
+}
+
+if (resStatusFilter) {
+  resStatusFilter.addEventListener('change', loadReservationRequests);
+}
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── ADMIN PC AVAILABILITY CONTROL ─────────────────────────────
+const adminResLab = document.getElementById('adminResLab');
+const adminResDate = document.getElementById('adminResDate');
+const adminLoadAvailabilityBtn = document.getElementById('adminLoadAvailabilityBtn');
+const adminPcGrid = document.getElementById('adminPcGrid');
+
+if (adminResDate) {
+  const today = new Date().toISOString().split('T')[0];
+  adminResDate.value = today;
+}
+
+async function loadAdminAvailability() {
+  const lab = adminResLab.value;
+  const date = adminResDate.value;
+
+  if (!lab || !date) {
+    showToast('Select a lab and date.', 'error');
+    return;
+  }
+
+  adminPcGrid.innerHTML = '<div class="pc-grid-empty">Loading...</div>';
+
+  try {
+    const { res, data } = await apiFetch(
+      `/reservations/availability?lab=${encodeURIComponent(lab)}&date=${date}`
+    );
+
+    if (!res.ok) {
+      showToast(data.message || 'Failed to load.', 'error');
+      return;
+    }
+
+    adminPcGrid.dataset.loaded = '1';
+    adminPcGrid.innerHTML = data.pcs.map(pc => {
+      const cls = pc.status === 'approved' ? 'reserved'
+        : pc.status === 'pending' ? 'pending'
+        : pc.status === 'blocked' ? 'blocked'
+        : 'available';
+      const clickable = cls === 'available' || cls === 'blocked';
+      return `<div class="pc-cell ${cls}" ${clickable ? `data-pc="${pc.pc_number}" data-state="${cls}"` : ''}>
+        ${pc.pc_number}
+      </div>`;
+    }).join('');
+
+    adminPcGrid.querySelectorAll('.pc-cell[data-pc]').forEach(cell => {
+      cell.addEventListener('click', () => toggleBlock(cell));
+    });
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
+}
+
+async function toggleBlock(cell) {
+  const lab = adminResLab.value;
+  const date = adminResDate.value;
+  const pc_number = parseInt(cell.dataset.pc, 10);
+  const currentlyBlocked = cell.dataset.state === 'blocked';
+  const blocked = !currentlyBlocked;
+
+  try {
+    const { res, data } = await apiFetch('/reservations/admin/block', {
+      method: 'POST',
+      body: JSON.stringify({ lab, pc_number, date, blocked }),
+    });
+    if (!res.ok) {
+      showToast(data.message || 'Failed to update.', 'error');
+      return;
+    }
+    loadAdminAvailability();
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
+}
+
+if (adminLoadAvailabilityBtn) {
+  adminLoadAvailabilityBtn.addEventListener('click', loadAdminAvailability);
+}
 
 // ── INIT ──────────────────────────────────────────────────────
 startSSEWithToken();
