@@ -18,7 +18,25 @@
       <ul class="dash-nav-links">
         <li class="dash-nav-item active" data-tab="home">Home</li>
         <li class="dash-nav-item" data-tab="history">History</li>
-        <li class="dash-nav-item">Reservation</li>
+        <li class="dash-nav-item" data-tab="reservation">Reservation</li>
+        <li class="notif-wrapper">
+          <button class="notif-bell" id="notifBellBtn" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            <span class="notif-dot hidden" id="notifDot"></span>
+          </button>
+          <div class="notif-dropdown hidden" id="notifDropdown">
+            <div class="notif-header">
+              <span>Notifications</span>
+              <button class="notif-mark-all" id="notifMarkAllBtn">Mark all read</button>
+            </div>
+            <div class="notif-list" id="notifList">
+              <div class="notif-empty">No notifications</div>
+            </div>
+          </div>
+        </li>
         <li>
           <button class="btn-logout-nav" id="navLogoutBtn">Log out</button>
         </li>
@@ -217,6 +235,66 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESERVATION SECTION (hidden by default) -->
+    <div class="reservation-section hidden" id="reservationSection">
+      <div class="reservation-panel">
+        <div class="panel-card">
+          <div class="panel-header">Reserve a PC</div>
+          <div class="reservation-body">
+            <div class="reservation-filters">
+              <div class="filter-group">
+                <label for="resLab">Laboratory</label>
+                <select id="resLab">
+                  <option value="">Select lab</option>
+                  <option>Lab 524</option>
+                  <option>Lab 526</option>
+                  <option>Lab 528</option>
+                  <option>Lab 530</option>
+                  <option>Lab 542</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="resDate">Date</label>
+                <input type="date" id="resDate" />
+              </div>
+              <button class="btn-primary" id="loadAvailabilityBtn">Check Availability</button>
+            </div>
+
+            <div class="pc-legend">
+              <div class="legend-item"><span class="legend-box available"></span> Available</div>
+              <div class="legend-item"><span class="legend-box reserved"></span> Reserved</div>
+              <div class="legend-item"><span class="legend-box pending"></span> Pending</div>
+            </div>
+
+            <div class="pc-grid" id="pcGrid">
+              <div class="pc-grid-empty">Select a lab and date to see available PCs.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESERVATION CONFIRM MODAL -->
+    <div id="reserveConfirmModal" class="modal-overlay hidden">
+      <div class="modal-card edit-modal" style="max-width:400px">
+        <div class="modal-header">
+          <h3>Confirm Reservation</h3>
+          <button class="modal-close" id="closeReserveConfirm">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-text">
+            Reserve <strong id="confirmPcText">--</strong> on
+            <strong id="confirmDateText">--</strong>?
+          </p>
+          <p class="confirm-note">Your reservation will need admin approval.</p>
+          <div class="modal-actions">
+            <button class="btn-cancel" id="cancelReserveConfirm">Cancel</button>
+            <button class="btn-primary" id="submitReserveBtn">Submit</button>
           </div>
         </div>
       </div>
