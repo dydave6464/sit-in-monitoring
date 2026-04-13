@@ -361,10 +361,30 @@
         <div class="panel">
           <div class="panel-header">
             <h3>Sit-in Records</h3>
+            <input type="text" id="sitinRecordsSearch" placeholder="Search records..." class="search-input" />
           </div>
-          <div class="empty-section">
-            <p>Coming soon.</p>
+          <div class="table-wrapper">
+            <table class="data-table" id="sitinRecordsTable">
+              <thead>
+                <tr>
+                  <th>Sit-in #</th>
+                  <th>ID Number</th>
+                  <th>Name</th>
+                  <th>Purpose</th>
+                  <th>Lab</th>
+                  <th>Login</th>
+                  <th>Logout</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="sitinRecordsTableBody">
+                <tr>
+                  <td colspan="8" class="empty-row">Loading records...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+          <div class="pagination" id="sitinRecordsPagination"></div>
         </div>
       </section>
 

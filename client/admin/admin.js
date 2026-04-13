@@ -64,6 +64,7 @@ function showSection(sectionId) {
   // Load section data
   if (sectionId === 'students') { loadStudents(); loadStudentCount(); }
   if (sectionId === 'current-sitin') loadCurrentSitin();
+  if (sectionId === 'sitin-records') loadSitinRecords();
   if (sectionId === 'reports') { loadReports(); loadReportsLog(); }
   if (sectionId === 'feedback') loadFeedback();
   if (sectionId === 'dashboard') loadAnnouncements();
@@ -843,6 +844,63 @@ function renderCurrentSitinPaginated() {
 }
 
 function goCurrentSitinPage(p) { currentSitinPage = p; renderCurrentSitinPaginated(); }
+
+// ── SIT-IN RECORDS ───────────────────────────────────────────
+let allSitinRecords = [];
+let sitinRecordsPage = 1;
+
+async function loadSitinRecords() {
+  try {
+    const { res, data } = await apiFetch('/admin/records');
+    if (!res.ok) return;
+    allSitinRecords = data.records || [];
+    sitinRecordsPage = 1;
+    renderSitinRecordsPaginated();
+  } catch (err) {
+    console.error('Load sit-in records error:', err);
+  }
+}
+
+function renderSitinRecords(list) {
+  const tbody = document.getElementById('sitinRecordsTableBody');
+  if (!tbody) return;
+  if (!list || list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No sit-in records yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(r => `
+    <tr>
+      <td>#${r.id}</td>
+      <td>${r.id_number}</td>
+      <td>${escapeHtml(r.student_name)}</td>
+      <td>${escapeHtml(r.purpose)}</td>
+      <td>${escapeHtml(r.lab)}</td>
+      <td>${formatTime(r.created_at)}</td>
+      <td>${r.ended_at ? formatTime(r.ended_at) : '--'}</td>
+      <td>${formatShortDate(r.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderSitinRecordsPaginated() {
+  const q = (document.getElementById('sitinRecordsSearch')?.value || '').toLowerCase();
+  const filtered = allSitinRecords.filter(r =>
+    String(r.id).includes(q) ||
+    r.id_number.includes(q) ||
+    (r.student_name || '').toLowerCase().includes(q) ||
+    (r.purpose || '').toLowerCase().includes(q) ||
+    (r.lab || '').toLowerCase().includes(q),
+  );
+  renderSitinRecords(paginate(filtered, sitinRecordsPage));
+  renderPagination('sitinRecordsPagination', filtered.length, sitinRecordsPage, 'goSitinRecordsPage');
+}
+
+function goSitinRecordsPage(p) { sitinRecordsPage = p; renderSitinRecordsPaginated(); }
+
+document.getElementById('sitinRecordsSearch')?.addEventListener('input', function () {
+  sitinRecordsPage = 1;
+  renderSitinRecordsPaginated();
+});
 
 // ── REPORTS LOG ──────────────────────────────────────────────
 let allReportsLog = [];
