@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS reservations (
   pc_number      INT NOT NULL,
   reserved_date  DATE NOT NULL,
   status         ENUM('pending', 'approved', 'rejected', 'cancelled') DEFAULT 'pending',
+  reason         TEXT DEFAULT NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   decided_at     DATETIME DEFAULT NULL,
   FOREIGN KEY (id_number) REFERENCES users(id_number),
@@ -80,6 +81,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   type           VARCHAR(50) NOT NULL,
   title          VARCHAR(255) NOT NULL,
   message        TEXT NOT NULL,
+  reservation_id INT DEFAULT NULL,
   is_read        BOOLEAN DEFAULT FALSE,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (id_number) REFERENCES users(id_number)

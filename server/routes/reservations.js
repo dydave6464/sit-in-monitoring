@@ -168,15 +168,19 @@ router.get('/admin/all', verifyToken, async (req, res) => {
 });
 
 // ── ADMIN: DECIDE RESERVATION (approve/reject) ───────────────
-// POST /api/reservations/admin/:id/decide  body: { decision: 'approved' | 'rejected' }
+// POST /api/reservations/admin/:id/decide  body: { decision, reason? }
 router.post('/admin/:id/decide', verifyToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin only.' });
   }
 
-  const { decision } = req.body;
+  const { decision, reason } = req.body;
   if (!['approved', 'rejected'].includes(decision)) {
     return res.status(400).json({ message: 'Invalid decision.' });
+  }
+
+  if (decision === 'rejected' && (!reason || !reason.trim())) {
+    return res.status(400).json({ message: 'Reason is required for rejection.' });
   }
 
   try {
@@ -196,8 +200,8 @@ router.post('/admin/:id/decide', verifyToken, async (req, res) => {
     }
 
     await pool.query(
-      `UPDATE reservations SET status = ?, decided_at = NOW() WHERE id = ?`,
-      [decision, req.params.id],
+      `UPDATE reservations SET status = ?, reason = ?, decided_at = NOW() WHERE id = ?`,
+      [decision, decision === 'rejected' ? reason.trim() : null, req.params.id],
     );
 
     // Create a notification for the student
@@ -212,14 +216,46 @@ router.post('/admin/:id/decide', verifyToken, async (req, res) => {
       : `Your reservation for ${reservation.lab} PC #${reservation.pc_number} on ${dateStr} has been rejected.`;
 
     await pool.query(
-      `INSERT INTO notifications (id_number, type, title, message)
-       VALUES (?, 'reservation', ?, ?)`,
-      [reservation.id_number, title, message],
+      `INSERT INTO notifications (id_number, type, title, message, reservation_id)
+       VALUES (?, 'reservation', ?, ?, ?)`,
+      [reservation.id_number, title, message, reservation.id],
     );
 
     return res.status(200).json({ message: `Reservation ${decision}.` });
   } catch (err) {
     console.error('Decide reservation error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── GET RESERVATION BY ID ────────────────────────────────────
+// GET /api/reservations/:id
+// Students can only fetch their own, admins can fetch any
+router.get('/:id', verifyToken, async (req, res) => {
+  // Skip if the id is actually one of the admin sub-routes (defensive)
+  if (req.params.id === 'my' || req.params.id === 'availability') {
+    return res.status(404).json({ message: 'Not found.' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, id_number, student_name, lab, pc_number, reserved_date, status, reason, created_at, decided_at
+       FROM reservations WHERE id = ?`,
+      [req.params.id],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Reservation not found.' });
+    }
+
+    const r = rows[0];
+    if (req.user.role !== 'admin' && r.id_number !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden.' });
+    }
+
+    return res.status(200).json({ reservation: r });
+  } catch (err) {
+    console.error('Get reservation error:', err);
     return res.status(500).json({ message: 'Server error.' });
   }
 });
