@@ -455,7 +455,7 @@ async function loadAvailability() {
     }
 
     pcGrid.innerHTML = data.pcs.map(pc => {
-      const statusClass = pc.status === 'approved' ? 'reserved'
+      const statusClass = pc.status === 'occupied' ? 'reserved'
         : pc.status === 'pending' ? 'pending'
         : 'available';
       const clickable = pc.status === 'available';

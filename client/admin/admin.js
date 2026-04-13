@@ -1251,12 +1251,15 @@ async function loadAdminAvailability() {
 
     adminPcGrid.dataset.loaded = '1';
     adminPcGrid.innerHTML = data.pcs.map(pc => {
-      const cls = pc.status === 'approved' ? 'reserved'
+      const cls = pc.status === 'occupied' ? 'reserved'
         : pc.status === 'pending' ? 'pending'
-        : pc.status === 'blocked' ? 'blocked'
         : 'available';
-      const clickable = cls === 'available' || cls === 'blocked';
-      return `<div class="pc-cell ${cls}" ${clickable ? `data-pc="${pc.pc_number}" data-state="${cls}"` : ''}>
+      const isAdminBlock = pc.source === 'admin';
+      // Clickable if available (to block) or admin-blocked (to unblock).
+      // Student reservations cannot be unblocked here.
+      const clickable = cls === 'available' || isAdminBlock;
+      return `<div class="pc-cell ${cls}"
+        ${clickable ? `data-pc="${pc.pc_number}" data-source="${pc.source || ''}" data-state="${cls}"` : ''}>
         ${pc.pc_number}
       </div>`;
     }).join('');
@@ -1271,15 +1274,15 @@ async function loadAdminAvailability() {
 
 async function toggleBlock(cell) {
   const lab = adminResLab.value;
-  const date = adminResDate.value;
   const pc_number = parseInt(cell.dataset.pc, 10);
-  const currentlyBlocked = cell.dataset.state === 'blocked';
-  const blocked = !currentlyBlocked;
+  const isAdminBlock = cell.dataset.source === 'admin';
+  // If currently admin-blocked, unblock. Otherwise, block.
+  const blocked = !isAdminBlock;
 
   try {
     const { res, data } = await apiFetch('/reservations/admin/block', {
       method: 'POST',
-      body: JSON.stringify({ lab, pc_number, date, blocked }),
+      body: JSON.stringify({ lab, pc_number, blocked }),
     });
     if (!res.ok) {
       showToast(data.message || 'Failed to update.', 'error');
