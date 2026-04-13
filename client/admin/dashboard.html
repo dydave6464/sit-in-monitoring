@@ -473,27 +473,61 @@
 
       <!-- ── RESERVATION SECTION ────────────────────────────── -->
       <section class="content-section" id="section-reservation">
-        <div class="panel">
-          <div class="panel-header">
-            <h3>Reservations</h3>
+        <div class="reservation-split">
+          <!-- LEFT: Pending Reservations List -->
+          <div class="panel reservation-list-panel">
+            <div class="panel-header">
+              <h3>Reservation Requests</h3>
+              <select id="resStatusFilter" class="search-input" style="max-width: 140px;">
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="reservation-requests" id="reservationRequests">
+              <div class="empty-row">Loading...</div>
+            </div>
           </div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ID Number</th>
-                  <th>Student Name</th>
-                  <th>Lab</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="5" class="empty-row">No reservations yet.</td>
-                </tr>
-              </tbody>
-            </table>
+
+          <!-- RIGHT: Admin PC Control Panel -->
+          <div class="panel reservation-control-panel">
+            <div class="panel-header">
+              <h3>PC Availability Control</h3>
+            </div>
+            <div class="control-body">
+              <div class="control-filters">
+                <div class="filter-group">
+                  <label>Laboratory</label>
+                  <select id="adminResLab">
+                    <option value="">Select lab</option>
+                    <option>Lab 524</option>
+                    <option>Lab 526</option>
+                    <option>Lab 528</option>
+                    <option>Lab 530</option>
+                    <option>Lab 542</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label>Date</label>
+                  <input type="date" id="adminResDate" />
+                </div>
+                <button class="btn-primary-sm" id="adminLoadAvailabilityBtn">Load</button>
+              </div>
+
+              <div class="control-legend">
+                <div class="legend-item"><span class="legend-box available"></span> Available</div>
+                <div class="legend-item"><span class="legend-box reserved"></span> Reserved</div>
+                <div class="legend-item"><span class="legend-box pending"></span> Pending</div>
+                <div class="legend-item"><span class="legend-box blocked"></span> Blocked</div>
+              </div>
+
+              <p class="control-hint">Click an available PC to block it. Click a blocked PC to unblock.</p>
+
+              <div class="admin-pc-grid" id="adminPcGrid">
+                <div class="pc-grid-empty">Select a lab and date to manage PCs.</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
