@@ -292,6 +292,9 @@
             <h3>Students Information</h3>
             <div class="panel-actions">
               <input type="text" id="studentSearch" placeholder="Search student..." class="search-input" />
+              <button class="btn-primary-sm" id="addStudentBtn">
+                + Add Student
+              </button>
               <button class="btn-danger-sm" id="resetAllBtn">
                 Reset All Sessions
               </button>
@@ -589,6 +592,101 @@
         <button class="btn-secondary" id="cancelSitinModal">Cancel</button>
         <button class="btn-primary-sm" id="submitSitinBtn">Start Sit-in</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ── ADD STUDENT MODAL ─────────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="addStudentModal">
+    <div class="modal-card add-student-modal">
+      <div class="modal-header">
+        <h3>Add New Student</h3>
+        <button class="modal-close" id="closeAddStudentModal">&times;</button>
+      </div>
+      <form id="addStudentForm" class="modal-body add-student-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="newIdNumber">ID Number</label>
+            <input type="text" id="newIdNumber" placeholder="8-digit ID" pattern="[0-9]{8}" maxlength="8" required />
+          </div>
+          <div class="form-field">
+            <label for="newCourseLevel">Year Level</label>
+            <select id="newCourseLevel" required>
+              <option value="">Select</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="newFirstName">First Name</label>
+            <input type="text" id="newFirstName" required />
+          </div>
+          <div class="form-field">
+            <label for="newLastName">Last Name</label>
+            <input type="text" id="newLastName" required />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="newMiddleName">Middle Name <span class="optional-label">(optional)</span></label>
+          <input type="text" id="newMiddleName" />
+        </div>
+
+        <div class="form-field">
+          <label for="newCourse">Course</label>
+          <select id="newCourse" required>
+            <option value="">Select Course</option>
+            <option>Information Technology</option>
+            <option>Computer Engineering</option>
+            <option>Civil Engineering</option>
+            <option>Mechanical Engineering</option>
+            <option>Electrical Engineering</option>
+            <option>Industrial Engineering</option>
+            <option>Naval Architecture and Marine Engineering</option>
+            <option>Elementary Education (BEEd)</option>
+            <option>Secondary Education (BSEd)</option>
+            <option>Criminology</option>
+            <option>Commerce</option>
+            <option>Accountancy</option>
+            <option>Hotel and Restaurant Management</option>
+            <option>Customs Administration</option>
+            <option>Computer Secretarial</option>
+            <option>Industrial Psychology</option>
+            <option>AB Political Science</option>
+            <option>AB English</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="newEmail">Email</label>
+          <input type="email" id="newEmail" placeholder="student@email.com" required />
+        </div>
+
+        <div class="form-field">
+          <label for="newAddress">Address <span class="optional-label">(optional)</span></label>
+          <input type="text" id="newAddress" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="newPassword">Password</label>
+            <input type="password" id="newPassword" placeholder="Min 6 characters" required minlength="6" />
+          </div>
+          <div class="form-field">
+            <label for="newRepeatPassword">Confirm Password</label>
+            <input type="password" id="newRepeatPassword" required minlength="6" />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelAddStudentModal">Cancel</button>
+          <button type="submit" class="btn-primary-sm">Create Student</button>
+        </div>
+      </form>
     </div>
   </div>
 

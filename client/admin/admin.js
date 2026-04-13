@@ -1160,7 +1160,7 @@ async function loadReservationRequests() {
       });
       const timeStr = r.start_time && r.end_time
         ? `${formatTime12h(r.start_time)} – ${formatTime12h(r.end_time)}`
-        : '';
+        : 'No time set';
       const showActions = r.status === 'pending';
       return `
         <div class="reservation-request">
@@ -1172,7 +1172,7 @@ async function loadReservationRequests() {
             <span class="req-status ${r.status}">${r.status}</span>
           </div>
           <div class="req-detail"><strong>${escapeHtml(r.lab)}</strong> · PC #${r.pc_number} · ${date}</div>
-          ${timeStr ? `<div class="req-detail req-time">${timeStr}</div>` : ''}
+          <div class="req-detail req-time">${timeStr}</div>
           ${showActions ? `
           <div class="req-actions">
             <button class="btn-approve" data-id="${r.id}" data-decision="approved">Approve</button>
@@ -1366,6 +1366,85 @@ async function toggleBlock(cell) {
 
 if (adminLoadAvailabilityBtn) {
   adminLoadAvailabilityBtn.addEventListener('click', loadAdminAvailability);
+}
+
+// ── ADD STUDENT MODAL ─────────────────────────────────────────
+const addStudentBtn = document.getElementById('addStudentBtn');
+const addStudentModal = document.getElementById('addStudentModal');
+const closeAddStudentModalBtn = document.getElementById('closeAddStudentModal');
+const cancelAddStudentModalBtn = document.getElementById('cancelAddStudentModal');
+const addStudentForm = document.getElementById('addStudentForm');
+
+function openAddStudentModal() {
+  addStudentForm.reset();
+  addStudentModal.classList.remove('hidden');
+}
+
+function closeAddStudentModal() {
+  addStudentModal.classList.add('hidden');
+}
+
+if (addStudentBtn) addStudentBtn.addEventListener('click', openAddStudentModal);
+if (closeAddStudentModalBtn) closeAddStudentModalBtn.addEventListener('click', closeAddStudentModal);
+if (cancelAddStudentModalBtn) cancelAddStudentModalBtn.addEventListener('click', closeAddStudentModal);
+if (addStudentModal) {
+  addStudentModal.addEventListener('click', (e) => {
+    if (e.target === addStudentModal) closeAddStudentModal();
+  });
+}
+
+if (addStudentForm) {
+  addStudentForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id_number = document.getElementById('newIdNumber').value.trim();
+    const password = document.getElementById('newPassword').value;
+    const repeat = document.getElementById('newRepeatPassword').value;
+
+    if (!/^\d{8}$/.test(id_number)) {
+      showToast('ID Number must be exactly 8 digits.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    if (password !== repeat) {
+      showToast('Passwords do not match.', 'error');
+      return;
+    }
+
+    const payload = {
+      id_number,
+      first_name: document.getElementById('newFirstName').value.trim(),
+      last_name: document.getElementById('newLastName').value.trim(),
+      middle_name: document.getElementById('newMiddleName').value.trim(),
+      course_level: document.getElementById('newCourseLevel').value,
+      course: document.getElementById('newCourse').value,
+      email: document.getElementById('newEmail').value.trim(),
+      address: document.getElementById('newAddress').value.trim(),
+      password,
+    };
+
+    try {
+      const { res, data } = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        showToast(data.message || 'Failed to add student.', 'error');
+        return;
+      }
+
+      showToast('Student added successfully!', 'success');
+      closeAddStudentModal();
+      loadStudents();
+      loadStudentCount();
+    } catch (err) {
+      showToast('Cannot connect to server.', 'error');
+    }
+  });
 }
 
 // ── INIT ──────────────────────────────────────────────────────
