@@ -85,6 +85,17 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (id_number) REFERENCES users(id_number)
 );
 
+-- ── ADMIN PC BLOCKS ─────────────────────────────────────────
+-- Tracks PCs the admin has manually marked as unavailable for a given lab/date
+CREATE TABLE IF NOT EXISTS admin_pc_blocks (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  lab           VARCHAR(100) NOT NULL,
+  pc_number     INT NOT NULL,
+  blocked_date  DATE NOT NULL,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_block (lab, pc_number, blocked_date)
+);
+
 -- ── DEFAULT ADMIN ACCOUNT ────────────────────────────────────
 -- Password: admin123 — change after first login
 INSERT INTO users (id_number, last_name, first_name, middle_name, password, role, remaining_sessions)
