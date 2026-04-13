@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS reservations (
   lab            VARCHAR(100) NOT NULL,
   pc_number      INT NOT NULL,
   reserved_date  DATE NOT NULL,
+  start_time     TIME NOT NULL,
+  end_time       TIME NOT NULL,
   status         ENUM('pending', 'approved', 'rejected', 'cancelled') DEFAULT 'pending',
   reason         TEXT DEFAULT NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

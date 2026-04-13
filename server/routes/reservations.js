@@ -62,10 +62,18 @@ router.post('/', verifyToken, async (req, res) => {
     return res.status(403).json({ message: 'Students only.' });
   }
 
-  const { lab, pc_number, reserved_date } = req.body;
+  const { lab, pc_number, reserved_date, start_time, end_time } = req.body;
 
   if (!lab || !pc_number || !reserved_date) {
     return res.status(400).json({ message: 'Lab, PC number, and date are required.' });
+  }
+
+  if (!start_time || !end_time) {
+    return res.status(400).json({ message: 'Start and end time are required.' });
+  }
+
+  if (start_time >= end_time) {
+    return res.status(400).json({ message: 'End time must be after start time.' });
   }
 
   if (pc_number < 1 || pc_number > TOTAL_PCS) {
@@ -109,9 +117,9 @@ router.post('/', verifyToken, async (req, res) => {
     const studentName = [u.first_name, u.middle_name, u.last_name].filter(Boolean).join(' ');
 
     await pool.query(
-      `INSERT INTO reservations (id_number, student_name, lab, pc_number, reserved_date, status)
-       VALUES (?, ?, ?, ?, ?, 'pending')`,
-      [req.user.id, studentName, lab, pc_number, reserved_date],
+      `INSERT INTO reservations (id_number, student_name, lab, pc_number, reserved_date, start_time, end_time, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      [req.user.id, studentName, lab, pc_number, reserved_date, start_time, end_time],
     );
 
     return res.status(201).json({ message: 'Reservation submitted! Waiting for admin approval.' });
@@ -126,7 +134,7 @@ router.post('/', verifyToken, async (req, res) => {
 router.get('/my', verifyToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT id, lab, pc_number, reserved_date, status, created_at, decided_at
+      `SELECT id, lab, pc_number, reserved_date, start_time, end_time, status, created_at, decided_at
        FROM reservations
        WHERE id_number = ?
        ORDER BY reserved_date DESC, created_at DESC`,
@@ -148,7 +156,7 @@ router.get('/admin/all', verifyToken, async (req, res) => {
   }
 
   const statusFilter = req.query.status;
-  let query = `SELECT id, id_number, student_name, lab, pc_number, reserved_date, status, created_at, decided_at
+  let query = `SELECT id, id_number, student_name, lab, pc_number, reserved_date, start_time, end_time, status, reason, created_at, decided_at
                FROM reservations`;
   const params = [];
 
@@ -239,7 +247,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      `SELECT id, id_number, student_name, lab, pc_number, reserved_date, status, reason, created_at, decided_at
+      `SELECT id, id_number, student_name, lab, pc_number, reserved_date, start_time, end_time, status, reason, created_at, decided_at
        FROM reservations WHERE id = ?`,
       [req.params.id],
     );
