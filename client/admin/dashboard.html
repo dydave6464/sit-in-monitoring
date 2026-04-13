@@ -592,6 +592,26 @@
     </div>
   </div>
 
+  <!-- ── REJECT RESERVATION MODAL ────────────────────────────── -->
+  <div class="modal-overlay hidden" id="rejectReservationModal">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3>Reject Reservation</h3>
+        <button class="modal-close" id="closeRejectModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-student-name" id="rejectTargetInfo">--</p>
+        <label for="rejectReasonInput">Reason (required)</label>
+        <textarea id="rejectReasonInput" rows="4" placeholder="Explain why this reservation is being rejected..."></textarea>
+        <input type="hidden" id="rejectTargetId" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelRejectModal">Cancel</button>
+        <button class="btn-danger-sm" id="confirmRejectBtn">Reject</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── EDIT SESSIONS MODAL ─────────────────────────────────── -->
   <div class="modal-overlay hidden" id="editSessionModal">
     <div class="modal-card modal-sm">

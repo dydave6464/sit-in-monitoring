@@ -300,6 +300,40 @@
       </div>
     </div>
 
+    <!-- RESERVATION DETAILS MODAL (from notifications) -->
+    <div id="reservationDetailsModal" class="modal-overlay hidden">
+      <div class="modal-card edit-modal" style="max-width:440px">
+        <div class="modal-header">
+          <h3 id="resDetailsTitle">Reservation Details</h3>
+          <button class="modal-close" id="closeResDetailsModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="res-status-banner" id="resDetailsBanner">--</div>
+          <div class="res-details-grid">
+            <div class="res-detail-row">
+              <span class="res-detail-label">Laboratory</span>
+              <span class="res-detail-value" id="resDetailsLab">--</span>
+            </div>
+            <div class="res-detail-row">
+              <span class="res-detail-label">PC Number</span>
+              <span class="res-detail-value" id="resDetailsPc">--</span>
+            </div>
+            <div class="res-detail-row">
+              <span class="res-detail-label">Date</span>
+              <span class="res-detail-value" id="resDetailsDate">--</span>
+            </div>
+          </div>
+          <div class="res-details-reason hidden" id="resDetailsReasonWrap">
+            <div class="res-detail-label">Reason</div>
+            <div class="res-detail-reason-text" id="resDetailsReason">--</div>
+          </div>
+          <p class="res-details-note hidden" id="resDetailsNote">
+            Keep a screenshot of this approval as proof when presenting it to the lab-in-charge.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- FEEDBACK MODAL -->
     <div id="feedbackModal" class="modal-overlay hidden">
       <div class="modal-card edit-modal" style="max-width:420px">

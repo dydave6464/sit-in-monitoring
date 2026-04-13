@@ -1177,33 +1177,89 @@ async function loadReservationRequests() {
         </div>`;
     }).join('');
 
-    reservationRequestsEl.querySelectorAll('.btn-approve, .btn-reject').forEach(btn => {
-      btn.addEventListener('click', () => decideReservation(btn.dataset.id, btn.dataset.decision));
+    reservationRequestsEl.querySelectorAll('.btn-approve').forEach(btn => {
+      btn.addEventListener('click', () => decideReservation(btn.dataset.id, 'approved'));
+    });
+    reservationRequestsEl.querySelectorAll('.btn-reject').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const parent = btn.closest('.reservation-request');
+        const name = parent.querySelector('.req-name')?.textContent || '';
+        const detail = parent.querySelector('.req-detail')?.textContent || '';
+        openRejectModal(id, `${name} — ${detail}`);
+      });
     });
   } catch (err) {
     reservationRequestsEl.innerHTML = '<div class="empty-row">Cannot connect to server.</div>';
   }
 }
 
-async function decideReservation(id, decision) {
+async function decideReservation(id, decision, reason) {
   try {
+    const body = { decision };
+    if (decision === 'rejected') body.reason = reason;
     const { res, data } = await apiFetch(`/reservations/admin/${id}/decide`, {
       method: 'POST',
-      body: JSON.stringify({ decision }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       showToast(data.message || 'Failed to update.', 'error');
-      return;
+      return false;
     }
     showToast(`Reservation ${decision}.`, 'success');
     loadReservationRequests();
-    // Refresh PC grid if currently viewing the same lab/date
     if (adminPcGrid && adminPcGrid.dataset.loaded === '1') {
       loadAdminAvailability();
     }
+    return true;
   } catch (err) {
     showToast('Cannot connect to server.', 'error');
+    return false;
   }
+}
+
+// ── REJECT RESERVATION MODAL ──────────────────────────────────
+const rejectReservationModal = document.getElementById('rejectReservationModal');
+const closeRejectModalBtn = document.getElementById('closeRejectModal');
+const cancelRejectModalBtn = document.getElementById('cancelRejectModal');
+const confirmRejectBtn = document.getElementById('confirmRejectBtn');
+const rejectTargetInfo = document.getElementById('rejectTargetInfo');
+const rejectTargetId = document.getElementById('rejectTargetId');
+const rejectReasonInput = document.getElementById('rejectReasonInput');
+
+function openRejectModal(id, info) {
+  rejectTargetId.value = id;
+  rejectTargetInfo.textContent = info;
+  rejectReasonInput.value = '';
+  rejectReservationModal.classList.remove('hidden');
+  setTimeout(() => rejectReasonInput.focus(), 100);
+}
+
+function closeRejectModal() {
+  rejectReservationModal.classList.add('hidden');
+  rejectTargetId.value = '';
+  rejectReasonInput.value = '';
+}
+
+if (closeRejectModalBtn) closeRejectModalBtn.addEventListener('click', closeRejectModal);
+if (cancelRejectModalBtn) cancelRejectModalBtn.addEventListener('click', closeRejectModal);
+if (rejectReservationModal) {
+  rejectReservationModal.addEventListener('click', (e) => {
+    if (e.target === rejectReservationModal) closeRejectModal();
+  });
+}
+
+if (confirmRejectBtn) {
+  confirmRejectBtn.addEventListener('click', async () => {
+    const id = rejectTargetId.value;
+    const reason = rejectReasonInput.value.trim();
+    if (!reason) {
+      showToast('Please enter a reason.', 'error');
+      return;
+    }
+    const ok = await decideReservation(id, 'rejected', reason);
+    if (ok) closeRejectModal();
+  });
 }
 
 if (resStatusFilter) {

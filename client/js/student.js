@@ -521,6 +521,78 @@ if (submitReserveBtn) {
   });
 }
 
+// ── RESERVATION DETAILS MODAL ────────────────────────────────
+const reservationDetailsModal = document.getElementById('reservationDetailsModal');
+const closeResDetailsModal = document.getElementById('closeResDetailsModal');
+const resDetailsTitle = document.getElementById('resDetailsTitle');
+const resDetailsBanner = document.getElementById('resDetailsBanner');
+const resDetailsLab = document.getElementById('resDetailsLab');
+const resDetailsPc = document.getElementById('resDetailsPc');
+const resDetailsDate = document.getElementById('resDetailsDate');
+const resDetailsReasonWrap = document.getElementById('resDetailsReasonWrap');
+const resDetailsReason = document.getElementById('resDetailsReason');
+const resDetailsNote = document.getElementById('resDetailsNote');
+
+async function openReservationDetails(reservationId) {
+  try {
+    const { res, data } = await apiFetch(`/reservations/${reservationId}`);
+    if (!res.ok) {
+      showToast(data.message || 'Failed to load reservation.', 'error');
+      return;
+    }
+
+    const r = data.reservation;
+    const dateStr = new Date(r.reserved_date).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+
+    resDetailsTitle.textContent = r.status === 'approved'
+      ? 'Reservation Approved'
+      : r.status === 'rejected'
+      ? 'Reservation Rejected'
+      : 'Reservation Details';
+
+    resDetailsBanner.className = `res-status-banner ${r.status}`;
+    resDetailsBanner.textContent = r.status;
+
+    resDetailsLab.textContent = r.lab;
+    resDetailsPc.textContent = `PC #${r.pc_number}`;
+    resDetailsDate.textContent = dateStr;
+
+    if (r.status === 'rejected' && r.reason) {
+      resDetailsReason.textContent = r.reason;
+      resDetailsReasonWrap.classList.remove('hidden');
+    } else {
+      resDetailsReasonWrap.classList.add('hidden');
+    }
+
+    if (r.status === 'approved') {
+      resDetailsNote.classList.remove('hidden');
+    } else {
+      resDetailsNote.classList.add('hidden');
+    }
+
+    reservationDetailsModal.classList.remove('hidden');
+    // Close notification dropdown when opening modal
+    if (notifDropdown) notifDropdown.classList.add('hidden');
+  } catch (err) {
+    showToast('Cannot connect to server.', 'error');
+  }
+}
+
+if (closeResDetailsModal) {
+  closeResDetailsModal.addEventListener('click', () => {
+    reservationDetailsModal.classList.add('hidden');
+  });
+}
+if (reservationDetailsModal) {
+  reservationDetailsModal.addEventListener('click', (e) => {
+    if (e.target === reservationDetailsModal) {
+      reservationDetailsModal.classList.add('hidden');
+    }
+  });
+}
+
 // ── NOTIFICATIONS ────────────────────────────────────────────
 const notifBellBtn = document.getElementById('notifBellBtn');
 const notifDropdown = document.getElementById('notifDropdown');
@@ -552,27 +624,36 @@ async function loadNotifications() {
       const time = new Date(n.created_at).toLocaleString('en-US', {
         month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
       });
+      const resAttr = n.reservation_id ? `data-reservation-id="${n.reservation_id}"` : '';
       return `
-        <div class="notif-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+        <div class="notif-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}" ${resAttr}>
           <div class="notif-item-title">${escapeHtml(n.title)}</div>
           <div class="notif-item-message">${escapeHtml(n.message)}</div>
           <div class="notif-item-time">${time}</div>
         </div>`;
     }).join('');
 
-    // Attach click to mark as read
+    // Attach click handlers
     notifList.querySelectorAll('.notif-item').forEach(item => {
       item.addEventListener('click', async () => {
-        if (!item.classList.contains('unread')) return;
         const id = item.dataset.id;
-        try {
-          await apiFetch(`/notifications/${id}/read`, { method: 'POST' });
-          item.classList.remove('unread');
-          // Recompute unread count
-          const stillUnread = notifList.querySelectorAll('.notif-item.unread').length;
-          if (stillUnread === 0) notifDot.classList.add('hidden');
-        } catch (err) {
-          // silent
+        const reservationId = item.dataset.reservationId;
+
+        // Mark as read if not already
+        if (item.classList.contains('unread')) {
+          try {
+            await apiFetch(`/notifications/${id}/read`, { method: 'POST' });
+            item.classList.remove('unread');
+            const stillUnread = notifList.querySelectorAll('.notif-item.unread').length;
+            if (stillUnread === 0) notifDot.classList.add('hidden');
+          } catch (err) {
+            // silent
+          }
+        }
+
+        // If this notification is linked to a reservation, open details modal
+        if (reservationId) {
+          openReservationDetails(reservationId);
         }
       });
     });
@@ -609,8 +690,8 @@ if (notifMarkAllBtn) {
   });
 }
 
-// Poll notifications every 30 seconds
-setInterval(loadNotifications, 30000);
+// Poll notifications every 10 seconds
+setInterval(loadNotifications, 10000);
 
 // ── INIT ─────────────────────────────────────────────────────
 loadProfile();
