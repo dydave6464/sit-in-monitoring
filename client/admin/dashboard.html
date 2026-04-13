@@ -92,6 +92,18 @@
           </div>
         </div>
 
+        <a href="#" class="nav-item" data-section="analytics">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+          </span>
+          <span>Analytics</span>
+        </a>
+
         <a href="#" class="nav-item" data-section="reservation">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
@@ -389,13 +401,12 @@
       </section>
 
       <!-- ── SIT-IN REPORTS SECTION ─────────────────────────── -->
-      <section class="content-section" id="section-reports">
-        <!-- Charts -->
+      <!-- ── ANALYTICS SECTION ───────────────────────────────── -->
+      <section class="content-section" id="section-analytics">
         <div class="reports-grid">
           <div class="panel">
             <div class="panel-header">
               <h3>Sit-ins by Course</h3>
-              <!-- <span class="panel-sub">Which departments use the lab most</span> -->
             </div>
             <div class="reports-layout">
               <div class="chart-wrapper">
@@ -408,7 +419,6 @@
           <div class="panel">
             <div class="panel-header">
               <h3>Sit-ins by Day of Week</h3>
-              <!-- <span class="panel-sub">Which days are busiest</span> -->
             </div>
             <div class="reports-layout reports-layout-bar">
               <div class="chart-wrapper chart-wrapper-bar">
@@ -417,7 +427,9 @@
             </div>
           </div>
         </div>
+      </section>
 
+      <section class="content-section" id="section-reports">
         <!-- Reports Table -->
         <div class="panel">
           <div class="panel-header">
@@ -623,21 +635,9 @@
         <button class="modal-close" id="closeAddStudentModal">&times;</button>
       </div>
       <form id="addStudentForm" class="modal-body add-student-form">
-        <div class="form-row">
-          <div class="form-field">
-            <label for="newIdNumber">ID Number</label>
-            <input type="text" id="newIdNumber" placeholder="8-digit ID" pattern="[0-9]{8}" maxlength="8" required />
-          </div>
-          <div class="form-field">
-            <label for="newCourseLevel">Year Level</label>
-            <select id="newCourseLevel" required>
-              <option value="">Select</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-            </select>
-          </div>
+        <div class="form-field">
+          <label for="newIdNumber">ID Number</label>
+          <input type="text" id="newIdNumber" placeholder="8-digit ID" pattern="[0-9]{8}" maxlength="8" required />
         </div>
 
         <div class="form-row">
@@ -656,29 +656,41 @@
           <input type="text" id="newMiddleName" />
         </div>
 
-        <div class="form-field">
-          <label for="newCourse">Course</label>
-          <select id="newCourse" required>
-            <option value="">Select Course</option>
-            <option>Information Technology</option>
-            <option>Computer Engineering</option>
-            <option>Civil Engineering</option>
-            <option>Mechanical Engineering</option>
-            <option>Electrical Engineering</option>
-            <option>Industrial Engineering</option>
-            <option>Naval Architecture and Marine Engineering</option>
-            <option>Elementary Education (BEEd)</option>
-            <option>Secondary Education (BSEd)</option>
-            <option>Criminology</option>
-            <option>Commerce</option>
-            <option>Accountancy</option>
-            <option>Hotel and Restaurant Management</option>
-            <option>Customs Administration</option>
-            <option>Computer Secretarial</option>
-            <option>Industrial Psychology</option>
-            <option>AB Political Science</option>
-            <option>AB English</option>
-          </select>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="newCourse">Course</label>
+            <select id="newCourse" required>
+              <option value="">Select Course</option>
+              <option>Information Technology</option>
+              <option>Computer Engineering</option>
+              <option>Civil Engineering</option>
+              <option>Mechanical Engineering</option>
+              <option>Electrical Engineering</option>
+              <option>Industrial Engineering</option>
+              <option>Naval Architecture and Marine Engineering</option>
+              <option>Elementary Education (BEEd)</option>
+              <option>Secondary Education (BSEd)</option>
+              <option>Criminology</option>
+              <option>Commerce</option>
+              <option>Accountancy</option>
+              <option>Hotel and Restaurant Management</option>
+              <option>Customs Administration</option>
+              <option>Computer Secretarial</option>
+              <option>Industrial Psychology</option>
+              <option>AB Political Science</option>
+              <option>AB English</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="newCourseLevel">Year Level</label>
+            <select id="newCourseLevel" required>
+              <option value="">Select</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-field">
