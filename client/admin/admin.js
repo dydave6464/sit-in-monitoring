@@ -1158,6 +1158,9 @@ async function loadReservationRequests() {
       const created = new Date(r.created_at).toLocaleString('en-US', {
         month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
       });
+      const timeStr = r.start_time && r.end_time
+        ? `${formatTime12h(r.start_time)} – ${formatTime12h(r.end_time)}`
+        : '';
       const showActions = r.status === 'pending';
       return `
         <div class="reservation-request">
@@ -1169,6 +1172,7 @@ async function loadReservationRequests() {
             <span class="req-status ${r.status}">${r.status}</span>
           </div>
           <div class="req-detail"><strong>${escapeHtml(r.lab)}</strong> · PC #${r.pc_number} · ${date}</div>
+          ${timeStr ? `<div class="req-detail req-time">${timeStr}</div>` : ''}
           ${showActions ? `
           <div class="req-actions">
             <button class="btn-approve" data-id="${r.id}" data-decision="approved">Approve</button>
@@ -1271,6 +1275,16 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function formatTime12h(timeStr) {
+  if (!timeStr) return '';
+  const [hStr, mStr] = timeStr.split(':');
+  let h = parseInt(hStr, 10);
+  const m = mStr || '00';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
 }
 
 // ── ADMIN PC AVAILABILITY CONTROL ─────────────────────────────

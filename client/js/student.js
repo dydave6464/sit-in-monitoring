@@ -419,6 +419,9 @@ const confirmDateText = document.getElementById('confirmDateText');
 const closeReserveConfirm = document.getElementById('closeReserveConfirm');
 const cancelReserveConfirm = document.getElementById('cancelReserveConfirm');
 const submitReserveBtn = document.getElementById('submitReserveBtn');
+const reserveStartTime = document.getElementById('reserveStartTime');
+const reserveEndTime = document.getElementById('reserveEndTime');
+const reserveTimeError = document.getElementById('reserveTimeError');
 
 let pendingReservation = null;
 
@@ -473,6 +476,11 @@ async function loadAvailability() {
         confirmDateText.textContent = new Date(date).toLocaleDateString('en-US', {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
+        // Reset time pickers and validation state
+        reserveStartTime.value = '';
+        reserveEndTime.value = '';
+        reserveTimeError.classList.add('hidden');
+        submitReserveBtn.disabled = true;
         reserveConfirmModal.classList.remove('hidden');
       });
     });
@@ -493,9 +501,34 @@ function closeConfirm() {
 if (closeReserveConfirm) closeReserveConfirm.addEventListener('click', closeConfirm);
 if (cancelReserveConfirm) cancelReserveConfirm.addEventListener('click', closeConfirm);
 
+function validateReserveTimes() {
+  const start = reserveStartTime.value;
+  const end = reserveEndTime.value;
+
+  if (!start || !end) {
+    reserveTimeError.classList.add('hidden');
+    submitReserveBtn.disabled = true;
+    return false;
+  }
+
+  if (start >= end) {
+    reserveTimeError.classList.remove('hidden');
+    submitReserveBtn.disabled = true;
+    return false;
+  }
+
+  reserveTimeError.classList.add('hidden');
+  submitReserveBtn.disabled = false;
+  return true;
+}
+
+if (reserveStartTime) reserveStartTime.addEventListener('change', validateReserveTimes);
+if (reserveEndTime) reserveEndTime.addEventListener('change', validateReserveTimes);
+
 if (submitReserveBtn) {
   submitReserveBtn.addEventListener('click', async () => {
     if (!pendingReservation) return;
+    if (!validateReserveTimes()) return;
 
     try {
       const { res, data } = await apiFetch('/reservations', {
@@ -504,6 +537,8 @@ if (submitReserveBtn) {
           lab: pendingReservation.lab,
           pc_number: pendingReservation.pc_number,
           reserved_date: pendingReservation.date,
+          start_time: reserveStartTime.value,
+          end_time: reserveEndTime.value,
         }),
       });
 
@@ -533,6 +568,17 @@ const resDetailsReasonWrap = document.getElementById('resDetailsReasonWrap');
 const resDetailsReason = document.getElementById('resDetailsReason');
 const resDetailsNote = document.getElementById('resDetailsNote');
 
+function formatTime12h(timeStr) {
+  if (!timeStr) return '';
+  // accepts "HH:MM" or "HH:MM:SS"
+  const [hStr, mStr] = timeStr.split(':');
+  let h = parseInt(hStr, 10);
+  const m = mStr || '00';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
 async function openReservationDetails(reservationId) {
   try {
     const { res, data } = await apiFetch(`/reservations/${reservationId}`);
@@ -558,6 +604,12 @@ async function openReservationDetails(reservationId) {
     resDetailsLab.textContent = r.lab;
     resDetailsPc.textContent = `PC #${r.pc_number}`;
     resDetailsDate.textContent = dateStr;
+    const resDetailsTime = document.getElementById('resDetailsTime');
+    if (resDetailsTime) {
+      resDetailsTime.textContent = r.start_time && r.end_time
+        ? `${formatTime12h(r.start_time)} – ${formatTime12h(r.end_time)}`
+        : '--';
+    }
 
     if (r.status === 'rejected' && r.reason) {
       resDetailsReason.textContent = r.reason;

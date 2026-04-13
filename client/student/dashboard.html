@@ -291,10 +291,23 @@
             Reserve <strong id="confirmPcText">--</strong> on
             <strong id="confirmDateText">--</strong>?
           </p>
+
+          <div class="time-picker-group">
+            <div class="time-picker">
+              <label for="reserveStartTime">Start Time</label>
+              <input type="time" id="reserveStartTime" />
+            </div>
+            <div class="time-picker">
+              <label for="reserveEndTime">End Time</label>
+              <input type="time" id="reserveEndTime" />
+            </div>
+          </div>
+          <div class="time-error hidden" id="reserveTimeError">End time must be after start time.</div>
+
           <p class="confirm-note">Your reservation will need admin approval.</p>
           <div class="modal-actions">
             <button class="btn-cancel" id="cancelReserveConfirm">Cancel</button>
-            <button class="btn-primary" id="submitReserveBtn">Submit</button>
+            <button class="btn-primary" id="submitReserveBtn" disabled>Submit</button>
           </div>
         </div>
       </div>
@@ -321,6 +334,10 @@
             <div class="res-detail-row">
               <span class="res-detail-label">Date</span>
               <span class="res-detail-value" id="resDetailsDate">--</span>
+            </div>
+            <div class="res-detail-row">
+              <span class="res-detail-label">Time</span>
+              <span class="res-detail-value" id="resDetailsTime">--</span>
             </div>
           </div>
           <div class="res-details-reason hidden" id="resDetailsReasonWrap">
