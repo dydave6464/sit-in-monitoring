@@ -70,7 +70,12 @@ function showSection(sectionId) {
   if (sectionId === 'analytics') loadReports();
   if (sectionId === 'feedback') loadFeedback();
   if (sectionId === 'dashboard') loadAnnouncements();
-  if (sectionId === 'reservation') loadReservationRequests();
+  if (sectionId === 'reservation') {
+    loadReservationRequests();
+    startReservationPolling();
+  } else {
+    stopReservationPolling();
+  }
 }
 
 navItems.forEach((item) => {
@@ -641,6 +646,10 @@ async function loadReports() {
   }
 }
 
+// ── CHART DATA CACHE (for export) ────────────────────────────
+let cachedCourseData = { labels: [], values: [] };
+let cachedDayData = { labels: [], values: [] };
+
 // ── DOUGHNUT: by Course ───────────────────────────────────────
 function buildCourseChart(records) {
   const counts = {};
@@ -654,6 +663,7 @@ function buildCourseChart(records) {
   const labels = Object.keys(counts);
   const values = Object.values(counts);
   const total = values.reduce((a, b) => a + b, 0);
+  cachedCourseData = { labels, values };
 
   if (courseChartInstance) courseChartInstance.destroy();
 
@@ -715,6 +725,7 @@ function buildDayChart(records) {
 
   const labels = DAY_NAMES;
   const values = Object.values(counts);
+  cachedDayData = { labels: [...labels], values: [...values] };
   const maxVal = Math.max(...values);
 
   // Highlight the busiest day
@@ -1035,6 +1046,29 @@ document.getElementById('feedbackSearch')?.addEventListener('input', function ()
   feedbackPage = 1;
   renderFeedbackPaginated();
 });
+
+// ── ANALYTICS EXPORTS ────────────────────────────────────────
+function exportCourseChart(format) {
+  const { labels, values } = cachedCourseData;
+  if (!labels.length) { showToast('No data to export.', 'error'); return; }
+  const headers = ['Course', 'Sit-in Count'];
+  const rows = labels.map((l, i) => [l, values[i]]);
+  const ts = new Date().toISOString().slice(0, 10);
+  const reportName = 'Sit-ins by Course';
+  if (format === 'csv') exportToCSV(headers, rows, `course-analytics-${ts}.csv`, reportName);
+  if (format === 'pdf') exportToPDF(headers, rows, `course-analytics-${ts}.pdf`, reportName);
+}
+
+function exportDayChart(format) {
+  const { labels, values } = cachedDayData;
+  if (!labels.length) { showToast('No data to export.', 'error'); return; }
+  const headers = ['Day of Week', 'Sit-in Count'];
+  const rows = labels.map((l, i) => [l, values[i]]);
+  const ts = new Date().toISOString().slice(0, 10);
+  const reportName = 'Sit-ins by Day of Week';
+  if (format === 'csv') exportToCSV(headers, rows, `day-analytics-${ts}.csv`, reportName);
+  if (format === 'pdf') exportToPDF(headers, rows, `day-analytics-${ts}.pdf`, reportName);
+}
 
 // ── EXPORT UTILITIES ─────────────────────────────────────────
 const INSTITUTION = 'University of Cebu Main Campus';
@@ -1389,6 +1423,21 @@ if (confirmRejectBtn) {
 
 if (resStatusFilter) {
   resStatusFilter.addEventListener('change', loadReservationRequests);
+}
+
+// Poll reservation requests every 10 seconds while on the Reservation tab
+let reservationPollInterval = null;
+
+function startReservationPolling() {
+  stopReservationPolling();
+  reservationPollInterval = setInterval(loadReservationRequests, 10000);
+}
+
+function stopReservationPolling() {
+  if (reservationPollInterval) {
+    clearInterval(reservationPollInterval);
+    reservationPollInterval = null;
+  }
 }
 
 function escapeHtml(str) {
