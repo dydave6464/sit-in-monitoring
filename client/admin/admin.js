@@ -1056,6 +1056,7 @@ function exportCourseChart(format) {
   const ts = new Date().toISOString().slice(0, 10);
   const reportName = 'Sit-ins by Course';
   if (format === 'csv') exportToCSV(headers, rows, `course-analytics-${ts}.csv`, reportName);
+  if (format === 'excel') exportToExcel(headers, rows, `course-analytics-${ts}.xlsx`, reportName);
   if (format === 'pdf') exportToPDF(headers, rows, `course-analytics-${ts}.pdf`, reportName);
 }
 
@@ -1067,6 +1068,7 @@ function exportDayChart(format) {
   const ts = new Date().toISOString().slice(0, 10);
   const reportName = 'Sit-ins by Day of Week';
   if (format === 'csv') exportToCSV(headers, rows, `day-analytics-${ts}.csv`, reportName);
+  if (format === 'excel') exportToExcel(headers, rows, `day-analytics-${ts}.xlsx`, reportName);
   if (format === 'pdf') exportToPDF(headers, rows, `day-analytics-${ts}.pdf`, reportName);
 }
 
