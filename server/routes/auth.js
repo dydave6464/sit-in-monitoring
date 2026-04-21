@@ -120,6 +120,18 @@ router.post('/reset-password', async (req, res) => {
     return res.status(400).json({ message: 'Please verify your code first.' });
 
   try {
+    // Check if new password is the same as the old one
+    const [rows] = await pool.query(
+      'SELECT password FROM users WHERE id_number = ?',
+      [entry.id_number],
+    );
+    if (rows.length > 0) {
+      const isSame = await bcrypt.compare(new_password, rows[0].password);
+      if (isSame) {
+        return res.status(400).json({ message: 'New password cannot be the same as your current password.' });
+      }
+    }
+
     const hashed = await bcrypt.hash(new_password, 10);
     await pool.query('UPDATE users SET password = ? WHERE id_number = ?', [
       hashed,
