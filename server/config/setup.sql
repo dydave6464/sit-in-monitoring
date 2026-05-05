@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS sit_in_sessions (
   student_name   VARCHAR(255) NOT NULL,
   purpose        VARCHAR(255) NOT NULL,
   lab            VARCHAR(100) NOT NULL,
+  pc_number      INT DEFAULT NULL,
   status         ENUM('active', 'completed', 'abandoned') DEFAULT 'active',
   last_heartbeat DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

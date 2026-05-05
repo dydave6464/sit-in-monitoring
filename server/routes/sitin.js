@@ -11,7 +11,7 @@ router.post('/start', verifyToken, async (req, res) => {
       .status(403)
       .json({ message: 'Only students can start a sit-in.' });
 
-  const { purpose, lab } = req.body;
+  const { purpose, lab, pc_number } = req.body;
   const id_number = req.user.id;
 
   if (!purpose || !lab)
@@ -44,9 +44,9 @@ router.post('/start', verifyToken, async (req, res) => {
 
     // Create sit-in session
     const [result] = await pool.query(
-      `INSERT INTO sit_in_sessions (id_number, student_name, purpose, lab, status, last_heartbeat)
-       VALUES (?, ?, ?, ?, 'active', NOW())`,
-      [id_number, student_name, purpose, lab],
+      `INSERT INTO sit_in_sessions (id_number, student_name, purpose, lab, pc_number, status, last_heartbeat)
+       VALUES (?, ?, ?, ?, ?, 'active', NOW())`,
+      [id_number, student_name, purpose, lab, pc_number || null],
     );
 
     const [session] = await pool.query(
@@ -170,14 +170,35 @@ router.post('/mark-abandoned', async (req, res) => {
 router.get('/history', verifyToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT s.id, s.purpose, s.lab, s.status, s.created_at, s.ended_at,
+      `SELECT s.id, s.purpose, s.lab, s.pc_number, s.status, s.created_at, s.ended_at,
+              TIMESTAMPDIFF(SECOND, s.created_at, s.ended_at) AS duration_seconds,
               (SELECT COUNT(*) FROM feedback f WHERE f.session_id = s.id) AS has_feedback
        FROM sit_in_sessions s
        WHERE s.id_number = ? AND s.status IN ('completed', 'abandoned')
        ORDER BY s.created_at DESC`,
       [req.user.id],
     );
-    return res.status(200).json({ history: rows });
+
+    const [[summaryRow]] = await pool.query(
+      `SELECT
+         COALESCE(SUM(TIMESTAMPDIFF(SECOND, created_at, ended_at)), 0) AS total_seconds,
+         COUNT(*) AS session_count,
+         COALESCE(AVG(TIMESTAMPDIFF(SECOND, created_at, ended_at)), 0) AS avg_seconds,
+         COALESCE(MAX(TIMESTAMPDIFF(SECOND, created_at, ended_at)), 0) AS longest_seconds
+       FROM sit_in_sessions
+       WHERE id_number = ? AND status = 'completed' AND ended_at IS NOT NULL`,
+      [req.user.id],
+    );
+
+    return res.status(200).json({
+      history: rows,
+      summary: {
+        total_seconds: Number(summaryRow.total_seconds) || 0,
+        session_count: Number(summaryRow.session_count) || 0,
+        avg_seconds: Number(summaryRow.avg_seconds) || 0,
+        longest_seconds: Number(summaryRow.longest_seconds) || 0,
+      },
+    });
   } catch (err) {
     console.error('History error:', err);
     return res.status(500).json({ message: 'Server error.' });

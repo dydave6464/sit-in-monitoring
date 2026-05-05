@@ -256,25 +256,57 @@ navTabs.forEach(tab => {
 });
 
 // ── HISTORY ──────────────────────────────────────────────────
+function formatDuration(seconds) {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+function formatTime(ts) {
+  if (!ts) return '--';
+  return new Date(ts).toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function renderSummary(summary) {
+  const totalHours = ((summary?.total_seconds || 0) / 3600).toFixed(1);
+  document.getElementById('summaryTotalHours').textContent = `${totalHours} h`;
+  document.getElementById('summarySessionCount').textContent = summary?.session_count || 0;
+  document.getElementById('summaryAvgDuration').textContent = formatDuration(summary?.avg_seconds);
+  document.getElementById('summaryLongestDuration').textContent = formatDuration(summary?.longest_seconds);
+}
+
 async function loadHistory() {
   const tbody = document.getElementById('historyTableBody');
   try {
     const { res, data } = await apiFetch('/sitin/history');
+    renderSummary(data?.summary);
     if (!res.ok || !data.history || data.history.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No session history yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No session history yet.</td></tr>';
       return;
     }
     tbody.innerHTML = data.history.map(h => {
       const date = new Date(h.created_at).toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: '2-digit'
       });
+      const timeIn = formatTime(h.created_at);
+      const timeOut = h.ended_at ? formatTime(h.ended_at) : '--';
+      const duration = h.ended_at ? formatDuration(h.duration_seconds) : '--';
+      const pcNo = h.pc_number ? `PC ${h.pc_number}` : '—';
       const hasFeedback = h.has_feedback > 0;
       const isCompleted = h.status === 'completed';
       return `
         <tr>
-          <td>${escapeHtml(h.purpose)}</td>
-          <td>${escapeHtml(h.lab)}</td>
           <td>${date}</td>
+          <td>${timeIn}</td>
+          <td>${timeOut}</td>
+          <td>${duration}</td>
+          <td>${escapeHtml(h.lab)}</td>
+          <td>${pcNo}</td>
           <td><span class="status-badge status-${h.status}">${h.status}</span></td>
           <td>${isCompleted
           ? hasFeedback
@@ -285,7 +317,7 @@ async function loadHistory() {
         </tr>`;
     }).join('');
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Unable to load history.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Unable to load history.</td></tr>';
   }
 }
 

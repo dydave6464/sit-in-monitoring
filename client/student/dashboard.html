@@ -217,21 +217,46 @@
     <div class="history-section hidden" id="historySection">
       <div class="history-panel">
         <div class="panel-card">
+          <div class="panel-header">Sit-in Summary</div>
+          <div class="sitin-summary-grid">
+            <div class="summary-tile">
+              <div class="summary-label">Total Sit-in Hours</div>
+              <div class="summary-value" id="summaryTotalHours">--</div>
+            </div>
+            <div class="summary-tile">
+              <div class="summary-label">Number of Sessions</div>
+              <div class="summary-value" id="summarySessionCount">--</div>
+            </div>
+            <div class="summary-tile">
+              <div class="summary-label">Average Session</div>
+              <div class="summary-value" id="summaryAvgDuration">--</div>
+            </div>
+            <div class="summary-tile">
+              <div class="summary-label">Longest Session</div>
+              <div class="summary-value" id="summaryLongestDuration">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-card" style="margin-top:1.25rem">
           <div class="panel-header">Session History</div>
           <div class="table-wrapper">
             <table class="history-table">
               <thead>
                 <tr>
-                  <th>Purpose</th>
-                  <th>Lab</th>
                   <th>Date</th>
+                  <th>Time-in</th>
+                  <th>Time-out</th>
+                  <th>Duration</th>
+                  <th>Lab</th>
+                  <th>PC No.</th>
                   <th>Status</th>
                   <th>Feedback</th>
                 </tr>
               </thead>
               <tbody id="historyTableBody">
                 <tr>
-                  <td colspan="5" class="empty-state">Loading history...</td>
+                  <td colspan="8" class="empty-state">Loading history...</td>
                 </tr>
               </tbody>
             </table>
