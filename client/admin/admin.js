@@ -73,6 +73,7 @@ function showSection(sectionId) {
   if (sectionId === 'dashboard') loadAnnouncements();
   if (sectionId === 'reservation') {
     loadReservationRequests();
+    loadReservationFeatureState();
     startReservationPolling();
   } else {
     stopReservationPolling();
@@ -1623,6 +1624,41 @@ if (addStudentForm) {
     }
   });
 }
+
+// ── RESERVATION FEATURE TOGGLE ───────────────────────────────
+async function loadReservationFeatureState() {
+  try {
+    const { res, data } = await apiFetch('/reservations/feature-status');
+    if (!res.ok) return;
+    setReservationFeatureUI(!!data.enabled);
+  } catch (_) {}
+}
+
+function setReservationFeatureUI(enabled) {
+  const toggle = document.getElementById('reservationFeatureToggle');
+  const stateLabel = document.getElementById('reservationFeatureState');
+  if (toggle) toggle.checked = enabled;
+  if (stateLabel) {
+    stateLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+    stateLabel.classList.toggle('rfb-on', enabled);
+    stateLabel.classList.toggle('rfb-off', !enabled);
+  }
+}
+
+document.getElementById('reservationFeatureToggle')?.addEventListener('change', async (e) => {
+  const enabled = e.target.checked;
+  try {
+    const { res, data } = await apiFetch('/reservations/feature-status', {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled }),
+    });
+    if (!res.ok) throw new Error(data?.message || 'Failed to toggle.');
+    setReservationFeatureUI(!!data.enabled);
+  } catch (err) {
+    e.target.checked = !enabled;
+    alert(err.message || 'Failed to toggle.');
+  }
+});
 
 // ── LEADERBOARD ──────────────────────────────────────────────
 async function loadLeaderboard() {

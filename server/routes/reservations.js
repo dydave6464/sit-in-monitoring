@@ -5,6 +5,45 @@ const verifyToken = require('../middleware/auth');
 
 const TOTAL_PCS = 50;
 
+async function isReservationsEnabled() {
+  const [[row]] = await pool.query(
+    "SELECT setting_value FROM app_settings WHERE setting_key = 'reservations_enabled'",
+  );
+  return !row || row.setting_value === '1';
+}
+
+// ── FEATURE STATUS (any logged-in user) ──────────────────────
+// GET /api/reservations/feature-status
+router.get('/feature-status', verifyToken, async (req, res) => {
+  try {
+    const enabled = await isReservationsEnabled();
+    return res.status(200).json({ enabled });
+  } catch (err) {
+    console.error('Feature status error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── TOGGLE RESERVATIONS (admin) ──────────────────────────────
+// PATCH /api/reservations/feature-status  body: { enabled: boolean }
+router.patch('/feature-status', verifyToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin only.' });
+  }
+  const enabled = !!req.body.enabled;
+  try {
+    await pool.query(
+      `INSERT INTO app_settings (setting_key, setting_value) VALUES ('reservations_enabled', ?)
+       ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)`,
+      [enabled ? '1' : '0'],
+    );
+    return res.status(200).json({ enabled });
+  } catch (err) {
+    console.error('Toggle reservations error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 // ── GET AVAILABILITY ─────────────────────────────────────────
 // GET /api/reservations/availability?lab=Lab%20524&date=2026-04-15
 router.get('/availability', verifyToken, async (req, res) => {
@@ -60,6 +99,10 @@ router.get('/availability', verifyToken, async (req, res) => {
 router.post('/', verifyToken, async (req, res) => {
   if (req.user.role !== 'student') {
     return res.status(403).json({ message: 'Students only.' });
+  }
+
+  if (!(await isReservationsEnabled())) {
+    return res.status(403).json({ message: 'Reservations are currently disabled by the administrator.' });
   }
 
   const { lab, pc_number, reserved_date, start_time, end_time } = req.body;

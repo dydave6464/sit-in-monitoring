@@ -24,6 +24,14 @@ CREATE TABLE IF NOT EXISTS users (
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ── APP SETTINGS ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS app_settings (
+  setting_key   VARCHAR(64) PRIMARY KEY,
+  setting_value VARCHAR(255) NOT NULL,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT IGNORE INTO app_settings (setting_key, setting_value) VALUES ('reservations_enabled', '1');
+
 -- ── POINT HISTORY ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS point_history (
   id         INT AUTO_INCREMENT PRIMARY KEY,

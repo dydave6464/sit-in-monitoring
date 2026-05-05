@@ -247,6 +247,7 @@ navTabs.forEach(tab => {
     } else if (target === 'reservation') {
       hideAllSections();
       reservationSection.classList.remove('hidden');
+      refreshReservationFeatureState();
     } else {
       hideAllSections();
       dashContainer.classList.remove('hidden');
@@ -443,6 +444,21 @@ window.addEventListener('resize', syncPanelHeight);
 // ── RESERVATION ──────────────────────────────────────────────
 const resLab = document.getElementById('resLab');
 const resDate = document.getElementById('resDate');
+async function refreshReservationFeatureState() {
+  try {
+    const { res, data } = await apiFetch('/reservations/feature-status');
+    if (!res.ok) return;
+    const enabled = !!data.enabled;
+    const banner = document.getElementById('reservationDisabledBanner');
+    const btn = document.getElementById('loadAvailabilityBtn');
+    if (banner) banner.classList.toggle('hidden', enabled);
+    if (btn) btn.disabled = !enabled;
+    document.querySelectorAll('#reservationSection select, #reservationSection input[type="date"]').forEach((el) => {
+      el.disabled = !enabled;
+    });
+  } catch (_) {}
+}
+
 const loadAvailabilityBtn = document.getElementById('loadAvailabilityBtn');
 const pcGrid = document.getElementById('pcGrid');
 const reserveConfirmModal = document.getElementById('reserveConfirmModal');

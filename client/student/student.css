@@ -1252,6 +1252,18 @@ input:disabled {
   }
 }
 
+/* ── RESERVATION DISABLED BANNER ───────────────────────────── */
+.reservation-disabled-banner {
+  margin: 12px 16px 0;
+  padding: 12px 16px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* ── SIT-IN SUMMARY TILES ──────────────────────────────────── */
 .sitin-summary-grid {
   display: grid;
