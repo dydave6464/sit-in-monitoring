@@ -711,6 +711,25 @@
   background: var(--blue-hover);
 }
 
+.btn-secondary-sm {
+  padding: 8px 18px;
+  background: #e2e8f0;
+  color: #334155;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  margin-bottom: 15px;
+}
+
+.btn-secondary-sm:hover {
+  background: #cbd5e1;
+}
+
 .btn-danger-sm {
   padding: 8px 18px;
   background: #e53e3e;
