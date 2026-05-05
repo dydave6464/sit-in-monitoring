@@ -19,8 +19,20 @@ CREATE TABLE IF NOT EXISTS users (
   address            VARCHAR(255),
   role               ENUM('student', 'admin') DEFAULT 'student',
   remaining_sessions INT DEFAULT 30,
+  reward_points      INT NOT NULL DEFAULT 0,
   profile_image      VARCHAR(255) DEFAULT NULL,
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ── POINT HISTORY ────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS point_history (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  id_number  CHAR(8) NOT NULL,
+  delta      INT NOT NULL,
+  reason     VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_pointhist_user_time (id_number, created_at),
+  FOREIGN KEY (id_number) REFERENCES users(id_number)
 );
 
 -- ── SIT-IN SESSIONS ──────────────────────────────────────────

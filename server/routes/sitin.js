@@ -116,14 +116,20 @@ router.post('/end', verifyToken, async (req, res) => {
       [id_number],
     );
 
+    // Award +1 reward point + auto-redeem (3 pts → +1 session)
+    const { awardPoints } = require('../services/points');
+    const award = await awardPoints(id_number, 1, 'sit-in completed');
+
     const [userRows] = await pool.query(
-      'SELECT remaining_sessions FROM users WHERE id_number = ?',
+      'SELECT remaining_sessions, reward_points FROM users WHERE id_number = ?',
       [id_number],
     );
 
     return res.status(200).json({
       message: 'Sit-in ended. Session deducted.',
       remaining_sessions: userRows[0].remaining_sessions,
+      reward_points: userRows[0].reward_points,
+      redemptions: award.redemptions,
     });
   } catch (err) {
     console.error('End sit-in error:', err);

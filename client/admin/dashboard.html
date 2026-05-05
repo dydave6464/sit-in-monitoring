@@ -116,6 +116,20 @@
           </span>
           <span>Reservation</span>
         </a>
+
+        <a href="#" class="nav-item" data-section="leaderboard">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M8 21h8" />
+              <path d="M12 17v4" />
+              <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" />
+              <path d="M17 4h3v3a3 3 0 0 1-3 3" />
+              <path d="M7 4H4v3a3 3 0 0 0 3 3" />
+            </svg>
+          </span>
+          <span>Leaderboard</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -575,7 +589,72 @@
           </div>
         </div>
       </section>
+
+      <!-- ── LEADERBOARD ──────────────────────────────────────── -->
+      <section class="content-section" id="section-leaderboard">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Top 10 Students — <span id="leaderboardSemesterLabel">--</span> Semester</h3>
+            <select id="leaderboardSemester" class="search-input" style="max-width:160px">
+              <option value="current">Current</option>
+              <option value="1st">1st Semester</option>
+              <option value="2nd">2nd Semester</option>
+              <option value="summer">Summer</option>
+            </select>
+          </div>
+          <div class="leaderboard-legend">
+            <!-- Score = 0.5·points + 0.3·hours + 0.2·tasks (each normalized 0–1 across cohort).
+            Every 3 reward points = +1 sit-in session. -->
+          </div>
+          <div class="table-wrap">
+            <table class="data-table leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Student</th>
+                  <th>ID</th>
+                  <th>Earned Points</th>
+                  <th>Total Hours</th>
+                  <th>Tasks</th>
+                  <th>Score</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardTableBody">
+                <tr><td colspan="8" class="empty-row">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+      </section>
     </main>
+  </div>
+
+  <!-- ── AWARD POINTS MODAL ─────────────────────────────────── -->
+  <div class="modal-overlay hidden" id="awardPointsModal">
+    <div class="modal-card" style="max-width:420px">
+      <div class="modal-header">
+        <h3>Award Points</h3>
+        <button class="modal-close" id="closeAwardPointsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-top:0">
+          Awarding to <strong id="awardPointsStudent">--</strong>
+        </p>
+        <label for="awardPointsDelta">Points to add (negative to deduct)</label>
+        <input type="number" id="awardPointsDelta" value="1" step="1" />
+        <label for="awardPointsReason" style="margin-top:10px">Reason</label>
+        <input type="text" id="awardPointsReason" placeholder="e.g., outstanding behavior" />
+        <p class="confirm-note" style="margin-top:8px">
+          Reaching 3 points auto-redeems for +1 sit-in session.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-secondary-sm" id="cancelAwardPointsModal">Cancel</button>
+          <button class="btn-primary-sm" id="submitAwardPointsBtn">Award</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ── SIT-IN FORM MODAL ───────────────────────────────────── -->

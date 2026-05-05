@@ -27,6 +27,7 @@ const sectionTitles = {
   feedback: 'Feedback Reports',
   analytics: 'Analytics',
   reservation: 'Reservations',
+  leaderboard: 'Leaderboard',
 };
 
 function showSection(sectionId) {
@@ -75,6 +76,10 @@ function showSection(sectionId) {
     startReservationPolling();
   } else {
     stopReservationPolling();
+  }
+  if (sectionId === 'leaderboard') {
+    loadLeaderboard();
+    fireConfetti();
   }
 }
 
@@ -1617,6 +1622,147 @@ if (addStudentForm) {
       showToast('Cannot connect to server.', 'error');
     }
   });
+}
+
+// ── LEADERBOARD ──────────────────────────────────────────────
+async function loadLeaderboard() {
+  const tbody = document.getElementById('leaderboardTableBody');
+  const semSelect = document.getElementById('leaderboardSemester');
+  const semester = semSelect ? semSelect.value : 'current';
+  tbody.innerHTML = '<tr><td colspan="8" class="empty-row">Loading...</td></tr>';
+  try {
+    const { res, data } = await apiFetch(`/admin/leaderboard?semester=${encodeURIComponent(semester)}`);
+    if (!res.ok) throw new Error(data?.message || 'Failed to load.');
+
+    document.getElementById('leaderboardSemesterLabel').textContent =
+      data.semester === '1st' ? '1st' : data.semester === '2nd' ? '2nd' : 'Summer';
+
+    if (!data.leaderboard || data.leaderboard.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-row">No qualifying students yet this semester.</td></tr>';
+      return;
+    }
+
+    const medal = (rank) => rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+    tbody.innerHTML = data.leaderboard.map((r) => `
+      <tr>
+        <td class="rank-cell">${medal(r.rank)}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.id_number)}</td>
+        <td>${r.earned_points}</td>
+        <td>${r.total_hours.toFixed(2)}h</td>
+        <td>${r.tasks_completed}</td>
+        <td><strong>${(r.score * 100).toFixed(1)}</strong></td>
+        <td>
+          <button class="btn-primary-sm" onclick="openAwardPointsModal('${escapeHtml(r.id_number)}', '${escapeHtml(r.name).replace(/'/g, "\\'")}')">+ Points</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">Unable to load leaderboard.</td></tr>';
+  }
+}
+
+document.getElementById('leaderboardSemester')?.addEventListener('change', loadLeaderboard);
+
+// ── AWARD POINTS MODAL ──────────────────────────────────────
+const awardPointsModal = document.getElementById('awardPointsModal');
+let awardTargetId = null;
+
+function openAwardPointsModal(idNumber, studentName) {
+  awardTargetId = idNumber;
+  document.getElementById('awardPointsStudent').textContent = `${studentName} (${idNumber})`;
+  document.getElementById('awardPointsDelta').value = 1;
+  document.getElementById('awardPointsReason').value = '';
+  awardPointsModal.classList.remove('hidden');
+}
+
+function closeAwardPointsModal() {
+  awardPointsModal.classList.add('hidden');
+  awardTargetId = null;
+}
+
+document.getElementById('closeAwardPointsModal')?.addEventListener('click', closeAwardPointsModal);
+document.getElementById('cancelAwardPointsModal')?.addEventListener('click', closeAwardPointsModal);
+document.getElementById('submitAwardPointsBtn')?.addEventListener('click', async () => {
+  if (!awardTargetId) return;
+  const delta = parseInt(document.getElementById('awardPointsDelta').value, 10);
+  const reason = document.getElementById('awardPointsReason').value.trim() || 'admin award';
+  if (!Number.isInteger(delta) || delta === 0) {
+    alert('Enter a non-zero integer.');
+    return;
+  }
+  try {
+    const { res, data } = await apiFetch(`/admin/students/${awardTargetId}/award-points`, {
+      method: 'POST',
+      body: JSON.stringify({ delta, reason }),
+    });
+    if (!res.ok) throw new Error(data?.message || 'Failed.');
+    closeAwardPointsModal();
+    loadLeaderboard();
+    if (data.redemptions > 0) fireConfetti();
+  } catch (err) {
+    alert(err.message || 'Failed to award points.');
+  }
+});
+
+// ── CONFETTI ─────────────────────────────────────────────────
+function fireConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.classList.add('active');
+
+  const colors = ['#fbbf24', '#f43f5e', '#3b82f6', '#10b981', '#a855f7', '#f97316'];
+  const particles = [];
+  const count = 160;
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+      y: canvas.height / 3,
+      vx: (Math.random() - 0.5) * 12,
+      vy: Math.random() * -14 - 4,
+      size: Math.random() * 7 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.3,
+      life: 0,
+    });
+  }
+
+  const gravity = 0.35;
+  const maxLife = 180;
+  let raf;
+  function frame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = 0;
+    particles.forEach((p) => {
+      if (p.life > maxLife) return;
+      alive++;
+      p.vy += gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.life++;
+      const alpha = Math.max(0, 1 - p.life / maxLife);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    if (alive > 0) {
+      raf = requestAnimationFrame(frame);
+    } else {
+      cancelAnimationFrame(raf);
+      canvas.classList.remove('active');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  frame();
 }
 
 // ── INIT ──────────────────────────────────────────────────────
