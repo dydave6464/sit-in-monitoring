@@ -130,6 +130,19 @@
           </span>
           <span>Leaderboard</span>
         </a>
+
+        <a href="#" class="nav-item" data-section="lab-software">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="14" rx="2" />
+              <line x1="2" y1="20" x2="22" y2="20" />
+              <path d="M9 9l2 2-2 2" />
+              <line x1="13" y1="13" x2="16" y2="13" />
+            </svg>
+          </span>
+          <span>Lab Software</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -638,6 +651,33 @@
         </div>
         <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
       </section>
+
+      <!-- ── LAB SOFTWARE ─────────────────────────────────────── -->
+      <section class="content-section" id="section-lab-software">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Manage Software per Laboratory</h3>
+            <select id="labSoftwareLab" class="search-input" style="max-width:160px">
+              <option value="">Select lab</option>
+            </select>
+          </div>
+          <div class="lab-software-body">
+            <p class="lab-software-hint" id="labSoftwareHint">
+              Choose a laboratory to manage its installed software.
+            </p>
+            <div class="lab-software-list hidden" id="labSoftwareList"></div>
+            <div class="lab-software-custom hidden" id="labSoftwareCustomWrap">
+              <input type="text" id="labSoftwareCustomName" placeholder="Add custom software name" />
+              <input type="text" id="labSoftwareCustomVersion" placeholder="Version (optional)" style="max-width:140px" />
+              <button class="btn-primary-sm" id="labSoftwareAddCustomBtn">+ Add</button>
+            </div>
+            <div class="lab-software-actions hidden" id="labSoftwareActions">
+              <button class="btn-primary-sm" id="labSoftwareSaveBtn">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

@@ -19,6 +19,7 @@
         <li class="dash-nav-item active" data-tab="home">Home</li>
         <li class="dash-nav-item" data-tab="history">History</li>
         <li class="dash-nav-item" data-tab="reservation">Reservation</li>
+        <li class="dash-nav-item" data-tab="lab-software">Lab Software</li>
         <li class="notif-wrapper">
           <button class="notif-bell" id="notifBellBtn" aria-label="Notifications">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -471,6 +472,29 @@
             <button type="submit" class="btn-primary">Save Changes</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- LAB SOFTWARE SECTION -->
+    <div class="lab-software-section hidden" id="labSoftwareSection">
+      <div class="lab-software-panel">
+        <div class="panel-card">
+          <div class="panel-header">Available Software per Laboratory</div>
+          <div class="lab-software-controls">
+            <label for="studentLabSoftwareLab">Laboratory</label>
+            <select id="studentLabSoftwareLab">
+              <option value="">Select lab</option>
+              <option>Lab 524</option>
+              <option>Lab 526</option>
+              <option>Lab 528</option>
+              <option>Lab 530</option>
+              <option>Lab 542</option>
+            </select>
+          </div>
+          <div class="lab-software-result" id="studentLabSoftwareResult">
+            <p class="empty-state">Choose a laboratory to see what software is installed.</p>
+          </div>
+        </div>
       </div>
     </div>
 

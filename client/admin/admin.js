@@ -28,6 +28,7 @@ const sectionTitles = {
   analytics: 'Analytics',
   reservation: 'Reservations',
   leaderboard: 'Leaderboard',
+  'lab-software': 'Lab Software',
 };
 
 function showSection(sectionId) {
@@ -81,6 +82,9 @@ function showSection(sectionId) {
   if (sectionId === 'leaderboard') {
     loadLeaderboard();
     fireConfetti();
+  }
+  if (sectionId === 'lab-software') {
+    initLabSoftwareUI();
   }
 }
 
@@ -1800,6 +1804,134 @@ function fireConfetti() {
   }
   frame();
 }
+
+// ── LAB SOFTWARE ─────────────────────────────────────────────
+let labSoftwarePresets = [];
+let labSoftwareLabs = [];
+let labSoftwareInitialized = false;
+let labSoftwareCurrentRows = []; // [{ software_name, version, selected }]
+
+async function initLabSoftwareUI() {
+  if (!labSoftwareInitialized) {
+    try {
+      const { res, data } = await apiFetch('/lab-software/presets');
+      if (res.ok) {
+        labSoftwarePresets = data.software || [];
+        labSoftwareLabs = data.labs || [];
+        const sel = document.getElementById('labSoftwareLab');
+        sel.innerHTML = '<option value="">Select lab</option>' +
+          labSoftwareLabs.map(l => `<option>${escapeHtml(l)}</option>`).join('');
+        labSoftwareInitialized = true;
+      }
+    } catch (_) {}
+  }
+  // Reset display
+  document.getElementById('labSoftwareLab').value = '';
+  document.getElementById('labSoftwareList').classList.add('hidden');
+  document.getElementById('labSoftwareCustomWrap').classList.add('hidden');
+  document.getElementById('labSoftwareActions').classList.add('hidden');
+  document.getElementById('labSoftwareHint').classList.remove('hidden');
+}
+
+document.getElementById('labSoftwareLab')?.addEventListener('change', async (e) => {
+  const lab = e.target.value;
+  if (!lab) {
+    document.getElementById('labSoftwareList').classList.add('hidden');
+    document.getElementById('labSoftwareCustomWrap').classList.add('hidden');
+    document.getElementById('labSoftwareActions').classList.add('hidden');
+    document.getElementById('labSoftwareHint').classList.remove('hidden');
+    return;
+  }
+  try {
+    const { res, data } = await apiFetch(`/lab-software/${encodeURIComponent(lab)}`);
+    if (!res.ok) throw new Error(data?.message || 'Failed.');
+
+    const existingByName = new Map();
+    (data.software || []).forEach(s => existingByName.set(s.software_name.toLowerCase(), s));
+
+    // Seed rows: presets first (selected if present), then any non-preset existing
+    labSoftwareCurrentRows = labSoftwarePresets.map(name => {
+      const ex = existingByName.get(name.toLowerCase());
+      return { software_name: name, version: ex?.version || '', selected: !!ex };
+    });
+    (data.software || []).forEach(s => {
+      const isPreset = labSoftwarePresets.some(p => p.toLowerCase() === s.software_name.toLowerCase());
+      if (!isPreset) {
+        labSoftwareCurrentRows.push({ software_name: s.software_name, version: s.version || '', selected: true });
+      }
+    });
+
+    renderLabSoftwareList();
+    document.getElementById('labSoftwareHint').classList.add('hidden');
+    document.getElementById('labSoftwareList').classList.remove('hidden');
+    document.getElementById('labSoftwareCustomWrap').classList.remove('hidden');
+    document.getElementById('labSoftwareActions').classList.remove('hidden');
+  } catch (err) {
+    alert(err.message || 'Failed to load lab software.');
+  }
+});
+
+function renderLabSoftwareList() {
+  const wrap = document.getElementById('labSoftwareList');
+  wrap.innerHTML = labSoftwareCurrentRows.map((row, idx) => `
+    <label class="lab-software-row">
+      <input type="checkbox" data-idx="${idx}" class="ls-check" ${row.selected ? 'checked' : ''} />
+      <span class="ls-name">${escapeHtml(row.software_name)}</span>
+      <input type="text" class="ls-version" data-idx="${idx}"
+             placeholder="version" value="${escapeHtml(row.version || '')}" />
+    </label>
+  `).join('');
+
+  wrap.querySelectorAll('.ls-check').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const i = +e.target.dataset.idx;
+      labSoftwareCurrentRows[i].selected = e.target.checked;
+    });
+  });
+  wrap.querySelectorAll('.ls-version').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const i = +e.target.dataset.idx;
+      labSoftwareCurrentRows[i].version = e.target.value;
+    });
+  });
+}
+
+document.getElementById('labSoftwareAddCustomBtn')?.addEventListener('click', () => {
+  const nameInput = document.getElementById('labSoftwareCustomName');
+  const verInput = document.getElementById('labSoftwareCustomVersion');
+  const name = nameInput.value.trim();
+  if (!name) return;
+  const exists = labSoftwareCurrentRows.find(r => r.software_name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    exists.selected = true;
+    if (verInput.value.trim()) exists.version = verInput.value.trim();
+  } else {
+    labSoftwareCurrentRows.push({ software_name: name, version: verInput.value.trim(), selected: true });
+  }
+  nameInput.value = '';
+  verInput.value = '';
+  renderLabSoftwareList();
+});
+
+document.getElementById('labSoftwareSaveBtn')?.addEventListener('click', async () => {
+  const lab = document.getElementById('labSoftwareLab').value;
+  if (!lab) return;
+  const payload = {
+    software: labSoftwareCurrentRows
+      .filter(r => r.selected)
+      .map(r => ({ software_name: r.software_name, version: r.version || null })),
+  };
+  try {
+    const { res, data } = await apiFetch(`/lab-software/${encodeURIComponent(lab)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(data?.message || 'Failed.');
+    alert(`Saved ${data.count} software item(s) for ${lab}.`);
+  } catch (err) {
+    alert(err.message || 'Failed to save.');
+  }
+});
 
 // ── INIT ──────────────────────────────────────────────────────
 startSSEWithToken();

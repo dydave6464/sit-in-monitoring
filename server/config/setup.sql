@@ -32,6 +32,17 @@ CREATE TABLE IF NOT EXISTS app_settings (
 );
 INSERT IGNORE INTO app_settings (setting_key, setting_value) VALUES ('reservations_enabled', '1');
 
+-- ── LAB SOFTWARE ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS lab_software (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  lab           VARCHAR(100) NOT NULL,
+  software_name VARCHAR(120) NOT NULL,
+  version       VARCHAR(60)  DEFAULT NULL,
+  notes         VARCHAR(255) DEFAULT NULL,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uniq_lab_software (lab, software_name)
+);
+
 -- ── POINT HISTORY ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS point_history (
   id         INT AUTO_INCREMENT PRIMARY KEY,

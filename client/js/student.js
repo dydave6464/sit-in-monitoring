@@ -225,6 +225,7 @@ const dashContainer = document.querySelector('.dash-container');
 const welcomeBanner = document.querySelector('.welcome-banner');
 const historySection = document.getElementById('historySection');
 const reservationSection = document.getElementById('reservationSection');
+const labSoftwareSection = document.getElementById('labSoftwareSection');
 const navTabs = document.querySelectorAll('.dash-nav-item[data-tab]');
 
 function hideAllSections() {
@@ -232,6 +233,7 @@ function hideAllSections() {
   welcomeBanner.classList.add('hidden');
   historySection.classList.add('hidden');
   reservationSection.classList.add('hidden');
+  if (labSoftwareSection) labSoftwareSection.classList.add('hidden');
 }
 
 navTabs.forEach(tab => {
@@ -248,6 +250,9 @@ navTabs.forEach(tab => {
       hideAllSections();
       reservationSection.classList.remove('hidden');
       refreshReservationFeatureState();
+    } else if (target === 'lab-software') {
+      hideAllSections();
+      labSoftwareSection?.classList.remove('hidden');
     } else {
       hideAllSections();
       dashContainer.classList.remove('hidden');
@@ -255,6 +260,38 @@ navTabs.forEach(tab => {
     }
   });
 });
+
+// ── LAB SOFTWARE (student view) ──────────────────────────────
+document.getElementById('studentLabSoftwareLab')?.addEventListener('change', async (e) => {
+  const lab = e.target.value;
+  const result = document.getElementById('studentLabSoftwareResult');
+  if (!lab) {
+    result.innerHTML = '<p class="empty-state">Choose a laboratory to see what software is installed.</p>';
+    return;
+  }
+  result.innerHTML = '<p class="empty-state">Loading...</p>';
+  try {
+    const { res, data } = await apiFetch(`/lab-software/${encodeURIComponent(lab)}`);
+    if (!res.ok) throw new Error(data?.message || 'Failed.');
+    if (!data.software || data.software.length === 0) {
+      result.innerHTML = `<p class="empty-state">No software registered for ${escapeHtml(lab)} yet.</p>`;
+      return;
+    }
+    result.innerHTML = `
+      <h4 class="lab-software-heading">${escapeHtml(lab)} — ${data.software.length} item(s)</h4>
+      <ul class="lab-software-items">
+        ${data.software.map(s => `
+          <li>
+            <span class="ls-item-name">${escapeHtml(s.software_name)}</span>
+            ${s.version ? `<span class="ls-item-version">v${escapeHtml(s.version)}</span>` : ''}
+          </li>
+        `).join('')}
+      </ul>`;
+  } catch (err) {
+    result.innerHTML = `<p class="empty-state">Unable to load software list.</p>`;
+  }
+});
+
 
 // ── HISTORY ──────────────────────────────────────────────────
 function formatDuration(seconds) {

@@ -19,6 +19,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/announcements', require('./routes/announcement'));
 app.use('/api/reservations', require('./routes/reservations'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/lab-software', require('./routes/lab-software'));
 
 // ── HEALTH CHECK ──────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
