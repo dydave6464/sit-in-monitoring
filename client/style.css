@@ -15,6 +15,20 @@
   --radius-sm: 8px;
 }
 
+[data-theme="dark"] {
+  --blue-dark: #0f1c33;
+  --blue-main: #4f9af2;
+  --blue-light: #1e2a44;
+  --blue-hover: #6cb0ff;
+  --text-dark: #e6edf7;
+  --text-mid: #b3bdcc;
+  --text-light: #7c8699;
+  --border: #2a364d;
+  --bg: #0e1320;
+  --white: #1a2138;
+  --shadow-md: 0 8px 40px rgba(0, 0, 0, 0.45);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

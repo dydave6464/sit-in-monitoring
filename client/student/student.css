@@ -1252,6 +1252,35 @@ input:disabled {
   }
 }
 
+/* ── THEME TOGGLE ──────────────────────────────────────────── */
+.theme-toggle {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.theme-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+
+.theme-icon-moon { display: none; }
+.theme-icon-sun  { display: inline-block; }
+
+[data-theme="dark"] .theme-icon-moon { display: inline-block; }
+[data-theme="dark"] .theme-icon-sun  { display: none; }
+
 /* ── LAB SOFTWARE (student view) ───────────────────────────── */
 .lab-software-section {
   padding: 24px;
@@ -1329,6 +1358,76 @@ input:disabled {
   background: var(--white);
   padding: 2px 8px;
   border-radius: 999px;
+}
+
+/* ── DARK MODE: extra overrides for hardcoded student colors ── */
+[data-theme="dark"] body {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .dash-navbar {
+  background: #0a1426;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .welcome-banner {
+  background: linear-gradient(135deg, #14223d, #1a3766);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .sidebar-card,
+[data-theme="dark"] .panel-card {
+  background: var(--white);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .info-label,
+[data-theme="dark"] .info-value {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .history-table th,
+[data-theme="dark"] .history-table td {
+  background: transparent;
+  color: var(--text-dark);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .history-table thead {
+  background: #14223d;
+}
+
+[data-theme="dark"] .summary-tile {
+  background: linear-gradient(135deg, #182238 0%, #1f2c47 100%);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .summary-label { color: var(--text-light); }
+[data-theme="dark"] .summary-value { color: var(--text-dark); }
+
+[data-theme="dark"] .modal-card {
+  background: var(--white);
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .modal-body input,
+[data-theme="dark"] .modal-body select,
+[data-theme="dark"] .modal-body textarea,
+[data-theme="dark"] .lab-software-controls select {
+  background: #0e1320;
+  color: var(--text-dark);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .notif-dropdown {
+  background: var(--white);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .empty-state {
+  color: var(--text-light);
 }
 
 /* ── RESERVATION DISABLED BANNER ───────────────────────────── */
