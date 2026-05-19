@@ -1933,6 +1933,20 @@ document.getElementById('labSoftwareSaveBtn')?.addEventListener('click', async (
   }
 });
 
+// ── DARK MODE TOGGLE ─────────────────────────────────────────
+(function initTheme() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+
+document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+});
+
 // ── INIT ──────────────────────────────────────────────────────
 startSSEWithToken();
 loadAnnouncements();
