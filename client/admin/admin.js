@@ -935,10 +935,37 @@ async function loadReportsLog() {
     if (!res.ok) return;
     allReportsLog = data.reports;
     reportsLogPage = 1;
+    populateReportsPurposeFilter();
     renderReportsLogPaginated();
   } catch (err) {
     console.error('Load reports log error:', err);
   }
+}
+
+function populateReportsPurposeFilter() {
+  const sel = document.getElementById('reportsPurposeFilter');
+  if (!sel) return;
+  const current = sel.value;
+  const purposes = Array.from(new Set(allReportsLog.map(r => r.purpose).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="">All Purposes</option>' +
+    purposes.map(p => `<option${p === current ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('');
+}
+
+function getFilteredReports() {
+  const q = (document.getElementById('reportsSearch')?.value || '').toLowerCase();
+  const lab = document.getElementById('reportsLabFilter')?.value || '';
+  const purpose = document.getElementById('reportsPurposeFilter')?.value || '';
+  return allReportsLog.filter(r => {
+    if (lab && r.lab !== lab) return false;
+    if (purpose && r.purpose !== purpose) return false;
+    if (!q) return true;
+    return (
+      r.id_number.includes(q) ||
+      r.student_name.toLowerCase().includes(q) ||
+      r.purpose.toLowerCase().includes(q) ||
+      r.lab.toLowerCase().includes(q)
+    );
+  });
 }
 
 function formatTime(dateStr) {
@@ -981,13 +1008,7 @@ function renderReportsLog(list) {
 }
 
 function renderReportsLogPaginated() {
-  const q = (document.getElementById('reportsSearch')?.value || '').toLowerCase();
-  const filtered = allReportsLog.filter(r =>
-    r.id_number.includes(q) ||
-    r.student_name.toLowerCase().includes(q) ||
-    r.purpose.toLowerCase().includes(q) ||
-    r.lab.toLowerCase().includes(q),
-  );
+  const filtered = getFilteredReports();
   renderReportsLog(paginate(filtered, reportsLogPage));
   renderPagination('reportsPagination', filtered.length, reportsLogPage, 'goReportsLogPage');
 }
@@ -995,6 +1016,14 @@ function renderReportsLogPaginated() {
 function goReportsLogPage(p) { reportsLogPage = p; renderReportsLogPaginated(); }
 
 document.getElementById('reportsSearch')?.addEventListener('input', function () {
+  reportsLogPage = 1;
+  renderReportsLogPaginated();
+});
+document.getElementById('reportsLabFilter')?.addEventListener('change', function () {
+  reportsLogPage = 1;
+  renderReportsLogPaginated();
+});
+document.getElementById('reportsPurposeFilter')?.addEventListener('change', function () {
   reportsLogPage = 1;
   renderReportsLogPaginated();
 });
@@ -1173,17 +1202,26 @@ function exportToPDF(headers, rows, filename, reportName) {
 }
 
 function exportReports(format) {
+  const filtered = getFilteredReports();
+  if (filtered.length === 0) {
+    alert('No records match the current filters.');
+    return;
+  }
   const headers = ['ID Number', 'Name', 'Purpose', 'Lab', 'Login', 'Logout', 'Duration', 'Date'];
-  const rows = allReportsLog.map(r => [
+  const rows = filtered.map(r => [
     r.id_number, r.student_name, r.purpose, r.lab,
     formatTime(r.login_time), formatTime(r.logout_time),
     formatDuration(r.duration_minutes), formatShortDate(r.session_date),
   ]);
+  const lab = document.getElementById('reportsLabFilter')?.value || 'all-labs';
+  const purpose = document.getElementById('reportsPurposeFilter')?.value || 'all-purposes';
+  const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'all';
   const ts = new Date().toISOString().slice(0, 10);
+  const filename = `sit-in-reports-${slug(lab)}-${slug(purpose)}-${ts}`;
   const reportName = 'Sit-in';
-  if (format === 'csv') exportToCSV(headers, rows, `sit-in-reports-${ts}.csv`, reportName);
-  if (format === 'excel') exportToExcel(headers, rows, `sit-in-reports-${ts}.xlsx`, reportName);
-  if (format === 'pdf') exportToPDF(headers, rows, `sit-in-reports-${ts}.pdf`, reportName);
+  if (format === 'csv') exportToCSV(headers, rows, `${filename}.csv`, reportName);
+  if (format === 'excel') exportToExcel(headers, rows, `${filename}.xlsx`, reportName);
+  if (format === 'pdf') exportToPDF(headers, rows, `${filename}.pdf`, reportName);
 }
 
 function exportFeedback(format) {

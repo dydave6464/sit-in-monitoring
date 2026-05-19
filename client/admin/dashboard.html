@@ -490,6 +490,17 @@
             <h3>Sit-in Report Log</h3>
             <div class="panel-actions">
               <input type="text" id="reportsSearch" placeholder="Search reports..." class="search-input" />
+              <select id="reportsLabFilter" class="search-input" style="max-width:140px">
+                <option value="">All Labs</option>
+                <option>Lab 524</option>
+                <option>Lab 526</option>
+                <option>Lab 528</option>
+                <option>Lab 530</option>
+                <option>Lab 542</option>
+              </select>
+              <select id="reportsPurposeFilter" class="search-input" style="max-width:170px">
+                <option value="">All Purposes</option>
+              </select>
               <div class="export-btns">
                 <button class="btn-export" onclick="exportReports('csv')">CSV</button>
                 <button class="btn-export" onclick="exportReports('excel')">Excel</button>
