@@ -48,6 +48,7 @@ function getDailyCutoffUTC() {
 // GET /api/admin/stats
 router.get('/stats', verifyToken, adminOnly, async (req, res) => {
   try {
+    await promoteDueReservations();
     const [[{ total_students }]] = await pool.query(
       `SELECT COUNT(*) as total_students FROM users WHERE role = 'student'`,
     );
@@ -106,10 +107,44 @@ router.put(
   },
 );
 
+// Convert approved reservations whose time window is currently active
+// into live sit-in sessions, so they appear in the Current Sit-in tab.
+// Idempotent: skips students with an existing active session and skips
+// reservations that were already promoted (matched on lab + pc + date).
+async function promoteDueReservations() {
+  try {
+    await pool.query(
+      `INSERT INTO sit_in_sessions
+         (id_number, student_name, purpose, lab, pc_number, status, last_heartbeat, created_at)
+       SELECT r.id_number, r.student_name, 'Reservation', r.lab, r.pc_number,
+              'active', NOW(),
+              TIMESTAMP(r.reserved_date, r.start_time)
+       FROM reservations r
+       WHERE r.status = 'approved'
+         AND TIMESTAMP(r.reserved_date, r.start_time) <= NOW()
+         AND TIMESTAMP(r.reserved_date, r.end_time)   >  NOW()
+         AND NOT EXISTS (
+           SELECT 1 FROM sit_in_sessions s
+           WHERE s.id_number = r.id_number AND s.status = 'active'
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM sit_in_sessions s
+           WHERE s.id_number = r.id_number
+             AND s.lab = r.lab
+             AND s.pc_number = r.pc_number
+             AND DATE(s.created_at) = r.reserved_date
+         )`,
+    );
+  } catch (err) {
+    console.error('promoteDueReservations error:', err);
+  }
+}
+
 // ── SIT-IN RECORDS ────────────────────────────────────────────
 // GET /api/admin/records
 router.get('/records', verifyToken, adminOnly, async (req, res) => {
   try {
+    await promoteDueReservations();
     const [rows] = await pool.query(
       `SELECT s.*, u.course, u.course_level, u.remaining_sessions
        FROM sit_in_sessions s
