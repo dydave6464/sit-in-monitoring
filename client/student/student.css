@@ -1430,6 +1430,134 @@ input:disabled {
   color: var(--text-light);
 }
 
+[data-theme="dark"] .panel-header {
+  background: #14223d;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme="dark"] .sidebar-header,
+[data-theme="dark"] .rules-content h3,
+[data-theme="dark"] .rules-content h4,
+[data-theme="dark"] .rules-content p,
+[data-theme="dark"] .rules-content li {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .dash-nav-item {
+  color: #cfd8e8;
+}
+[data-theme="dark"] .dash-nav-item.active,
+[data-theme="dark"] .dash-nav-item:hover {
+  color: white;
+}
+
+[data-theme="dark"] .btn-logout-nav {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="dark"] .btn-edit-profile {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .avatar-placeholder {
+  background: #1a2138;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] label {
+  color: var(--text-mid);
+}
+
+[data-theme="dark"] .modal-header h3 {
+  color: var(--text-dark);
+}
+[data-theme="dark"] .modal-close {
+  color: var(--text-mid);
+}
+
+[data-theme="dark"] .status-badge.status-completed {
+  background: #14533a; color: #86efac;
+}
+[data-theme="dark"] .status-badge.status-abandoned {
+  background: #4a1c1c; color: #fca5a5;
+}
+[data-theme="dark"] .status-badge.status-active {
+  background: #1e3a5f; color: #93c5fd;
+}
+
+[data-theme="dark"] .pc-cell {
+  background: #1a2138;
+  color: var(--text-dark);
+  border-color: var(--border);
+}
+[data-theme="dark"] .pc-cell.available { background: #14533a; color: #86efac; }
+[data-theme="dark"] .pc-cell.reserved  { background: #4a1c1c; color: #fca5a5; }
+[data-theme="dark"] .pc-cell.pending   { background: #5a4a14; color: #fcd34d; }
+
+[data-theme="dark"] .announcement-item {
+  background: #1a2138;
+  border-color: var(--border);
+  color: var(--text-dark);
+}
+[data-theme="dark"] .announcement-title,
+[data-theme="dark"] .announcement-text {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .notif-item {
+  border-color: var(--border);
+  color: var(--text-dark);
+}
+[data-theme="dark"] .notif-item:hover {
+  background: #14223d;
+}
+[data-theme="dark"] .notif-header {
+  background: #14223d;
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .reservation-disabled-banner {
+  background: #4a1c1c;
+  color: #fca5a5;
+  border-color: #ef4444;
+}
+
+[data-theme="dark"] .res-details-grid,
+[data-theme="dark"] .res-detail-row,
+[data-theme="dark"] .res-detail-label,
+[data-theme="dark"] .res-detail-value,
+[data-theme="dark"] .res-details-reason,
+[data-theme="dark"] .res-detail-reason-text {
+  color: var(--text-dark);
+}
+
+[data-theme="dark"] .star-select span {
+  color: #475569;
+}
+[data-theme="dark"] .star-select span.active {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .btn-feedback {
+  background: var(--blue-main);
+  color: white;
+}
+[data-theme="dark"] .btn-feedback:disabled {
+  background: #1e3a5f;
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .btn-cancel {
+  background: #1a2138;
+  color: var(--text-dark);
+  border-color: var(--border);
+}
+
 /* ── RESERVATION DISABLED BANNER ───────────────────────────── */
 .reservation-disabled-banner {
   margin: 12px 16px 0;
