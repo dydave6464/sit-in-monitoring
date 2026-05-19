@@ -26,7 +26,7 @@
     const avatarWrap = slot.querySelector('.podium-avatar');
 
     if (nameEl) nameEl.textContent = entry.name;
-    if (scoreEl) scoreEl.textContent = entry.score.toFixed(1);
+    if (scoreEl) scoreEl.textContent = entry.score.toFixed(2);
 
     if (entry.profile_image && avatarWrap) {
       const existing = avatarWrap.querySelector('.podium-img');

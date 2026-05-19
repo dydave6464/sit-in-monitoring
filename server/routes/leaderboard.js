@@ -53,21 +53,17 @@ router.get('/public-top', async (req, res) => {
       [start, end, start, end],
     );
 
-    const maxP = Math.max(1, ...rows.map(r => Number(r.earned_points) || 0));
-    const maxH = Math.max(1, ...rows.map(r => Number(r.total_seconds) || 0));
-    const maxT = Math.max(1, ...rows.map(r => Number(r.tasks_completed) || 0));
-
     const top = rows
       .map(r => {
         const earned = Number(r.earned_points) || 0;
-        const seconds = Number(r.total_seconds) || 0;
+        const hours = +(((Number(r.total_seconds) || 0) / 3600).toFixed(2));
         const tasks = Number(r.tasks_completed) || 0;
-        const score = 0.5 * (earned / maxP) + 0.3 * (seconds / maxH) + 0.2 * (tasks / maxT);
+        const score = 0.5 * earned + 0.3 * hours + 0.2 * tasks;
         const lastInitial = (r.last_name || '').trim().charAt(0).toUpperCase();
         return {
           name: `${r.first_name} ${lastInitial}${lastInitial ? '.' : ''}`.trim(),
           profile_image: r.profile_image,
-          score: +(score * 100).toFixed(1),
+          score: +score.toFixed(2),
         };
       })
       .filter(r => r.score > 0)

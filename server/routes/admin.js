@@ -426,25 +426,21 @@ router.get('/leaderboard', verifyToken, adminOnly, async (req, res) => {
       [start, end, start, end],
     );
 
-    const maxP = Math.max(1, ...rows.map(r => Number(r.earned_points) || 0));
-    const maxH = Math.max(1, ...rows.map(r => Number(r.total_seconds) || 0));
-    const maxT = Math.max(1, ...rows.map(r => Number(r.tasks_completed) || 0));
-
     const scored = rows
       .map(r => {
         const earned = Number(r.earned_points) || 0;
-        const seconds = Number(r.total_seconds) || 0;
+        const hours = +(((Number(r.total_seconds) || 0) / 3600).toFixed(2));
         const tasks = Number(r.tasks_completed) || 0;
-        const score = 0.5 * (earned / maxP) + 0.3 * (seconds / maxH) + 0.2 * (tasks / maxT);
+        const score = 0.5 * earned + 0.3 * hours + 0.2 * tasks;
         return {
           id_number: r.id_number,
           name: `${r.first_name} ${r.last_name}`.trim(),
           profile_image: r.profile_image,
           earned_points: earned,
           current_balance: Number(r.current_balance) || 0,
-          total_hours: +(seconds / 3600).toFixed(2),
+          total_hours: hours,
           tasks_completed: tasks,
-          score: +score.toFixed(4),
+          score: +score.toFixed(2),
         };
       })
       .filter(r => r.earned_points > 0 || r.total_hours > 0 || r.tasks_completed > 0)

@@ -1691,7 +1691,7 @@ async function loadLeaderboard() {
         <td>${r.earned_points}</td>
         <td>${r.total_hours.toFixed(2)}h</td>
         <td>${r.tasks_completed}</td>
-        <td><strong>${(r.score * 100).toFixed(1)}</strong></td>
+        <td><strong>${r.score.toFixed(2)}</strong></td>
         <td>
           <button class="btn-primary-sm" onclick="openAwardPointsModal('${escapeHtml(r.id_number)}', '${escapeHtml(r.name).replace(/'/g, "\\'")}')">+ Points</button>
         </td>
